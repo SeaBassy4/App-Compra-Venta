@@ -1,7 +1,7 @@
 package com.example.appcomprayventa
 
 object Constantes {
-    fun obtenerTiempoDis() : Long{
+    fun obtenerTiemposDis() : Long{
         return System.currentTimeMillis()
     }
 }

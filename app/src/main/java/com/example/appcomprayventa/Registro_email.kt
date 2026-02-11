@@ -1,14 +1,11 @@
 package com.example.appcomprayventa
 
 import android.app.ProgressDialog
-import android.os.Bundle
 import android.content.Intent
+import android.os.Bundle
 import android.util.Patterns
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.example.appcomprayventa.databinding.ActivityRegistroEmailBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -22,6 +19,7 @@ class Registro_email : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         binding = ActivityRegistroEmailBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -30,6 +28,9 @@ class Registro_email : AppCompatActivity() {
         progressDialog = ProgressDialog(this)
         progressDialog.setTitle("Espere por favor")
         progressDialog.setCanceledOnTouchOutside(false)
+
+        firebaseAuth = FirebaseAuth.getInstance()
+        comprobarSesion()
 
         binding.BtnRegistrar.setOnClickListener {
             validarInfo()
@@ -40,58 +41,60 @@ class Registro_email : AppCompatActivity() {
     private var password = ""
     private var r_password = ""
 
-
     private fun validarInfo() {
         email = binding.EtEmail.text.toString().trim()
         password = binding.EtPassword.text.toString().trim()
         r_password = binding.EtRPassword.text.toString().trim()
 
-        if(!Patterns.EMAIL_ADDRESS.matcher(email).matches()){
-            binding.EtEmail.error = "Email invalido"
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            binding.EtEmail.error = "Formato de correo incorrecto"
             binding.EtEmail.requestFocus()
-        }
-        else if (email.isEmpty()){
+        } else if (email.isEmpty()) {
             binding.EtEmail.error = "Ingrese un email"
             binding.EtEmail.requestFocus()
-        }
-        else if(password.isEmpty()){
-            binding.EtPassword.error = "Ingrese el Password"
+        } else if (password.isEmpty()) {
+            binding.EtPassword.error = "Ingrese una contraseña"
             binding.EtPassword.requestFocus()
-        }
-        else if(r_password.isEmpty()){
-            binding.EtRPassword.error = "Repita el password"
+        } else if (r_password.isEmpty()) {
+            binding.EtRPassword.error = "Ingrese una contraseña"
             binding.EtRPassword.requestFocus()
-        }
-        else if (password != r_password){
-            binding.EtRPassword.error = "No coinciden"
+        } else if (password != r_password) {
+            binding.EtRPassword.error = "Las contraseñas no coinciden"
             binding.EtRPassword.requestFocus()
-        }
-        else {
+        } else {
             registrarUsuario()
         }
     }
 
     private fun registrarUsuario() {
-        progressDialog.setMessage("Creando cuenta")
+        progressDialog.setMessage("Creando Cuenta")
         progressDialog.show()
 
         firebaseAuth.createUserWithEmailAndPassword(email, password)
             .addOnSuccessListener {
-            llenarInfoBD()
-        }
+                llenarInfoDB()
+            }
             .addOnFailureListener { exception ->
                 progressDialog.dismiss()
-                Toast.makeText(this,
+                Toast.makeText(
+                    this,
                     "No se registro el usuario debido a ${exception.message}",
-                    Toast.LENGTH_SHORT).show()
+                    Toast.LENGTH_SHORT
+                ).show()
             }
-
     }
 
-    private fun llenarInfoBD() {
+    private fun comprobarSesion() {
+        if (firebaseAuth.currentUser != null) {
+            startActivity(Intent(this, MainActivity::class.java))
+            finishAffinity()
+        }
+    }
+
+    private fun llenarInfoDB() {
         progressDialog.setMessage("Guardando Informacion")
 
-        val tiempo = Constantes.obtenerTiempoDis()
+        val tiempo = Constantes.obtenerTiemposDis()
         val emailUsuario = firebaseAuth.currentUser!!.email
         val uidUsuario = firebaseAuth.uid
 
@@ -105,7 +108,7 @@ class Registro_email : AppCompatActivity() {
         hashMap["tiempo"] = tiempo
         hashMap["online"] = true
         hashMap["email"] = "${emailUsuario}"
-        hashMap["uid"] = "${uidUsuario}"
+        hashMap["uis"] = "${uidUsuario}"
         hashMap["fecha_nac"] = ""
 
         val ref = FirebaseDatabase.getInstance().getReference("Usuarios")
@@ -116,13 +119,14 @@ class Registro_email : AppCompatActivity() {
                 startActivity(Intent(this, MainActivity::class.java))
                 finishAffinity()
             }
-            .addOnFailureListener {
+            .addOnFailureListener { exception ->
                 progressDialog.dismiss()
-                Toast.makeText(this, "No se registro debido a ${exception.message}",
-                    Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(
+                    this,
+                    "No se registro debido a ${exception.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+
             }
     }
-
-
 }
