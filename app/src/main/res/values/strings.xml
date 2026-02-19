@@ -22,6 +22,8 @@
 
     <string name="Txt_registro">Registro de usuario"</string>
     <string name="Et_r_password">Repeat Password</string>
-    <string name="Btn_registrar">Registrarme</string>xw
+    <string name="Btn_registrar">Registrarme</string>
+
+    <string name="Btn_cerrar_sesion">Cerrar Sesion</string>
 
 </resources>
