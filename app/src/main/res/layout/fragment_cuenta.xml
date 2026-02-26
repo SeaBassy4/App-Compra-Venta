@@ -1,17 +1,137 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".Fragmentos.FragmentCuenta">
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/Txt_perfil"
+            android:text="@string/Txt_perfil"
+            android:gravity="center"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:layout_marginTop="15dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <ImageView
+            android:id="@+id/Tv_perfil"
+            android:layout_below="@id/Txt_perfil"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/img_perfil"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="18dp"
+            android:scaleType="centerCrop"/>
+
+        <TextView
+            android:id="@+id/Txt_informacion"
+            android:text="@string/Txt_informacion"
+            android:layout_below="@id/Tv_perfil"
+            android:layout_marginTop="10dp"
+            android:textStyle="bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:layout_below="@id/Txt_informacion"
+            android:layout_marginTop="15dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:layout_below="@id/Txt_informacion"
+            android:layout_marginTop="15dp"
+            android:layout_alignParentEnd="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:layout_below="@id/Txt_informacion"
+            android:layout_marginTop="15dp"
+            android:layout_alignParentEnd="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:layout_below="@id/Txt_informacion"
+            android:layout_marginTop="15dp"
+            android:layout_alignParentEnd="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:layout_below="@id/Txt_informacion"
+            android:layout_marginTop="15dp"
+            android:layout_alignParentEnd="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:layout_below="@id/Txt_informacion"
+            android:layout_marginTop="15dp"
+            android:layout_alignParentEnd="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:layout_below="@id/Txt_informacion"
+            android:layout_marginTop="15dp"
+            android:layout_alignParentEnd="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:layout_below="@id/Txt_informacion"
+            android:layout_marginTop="15dp"
+            android:layout_alignParentEnd="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:layout_below="@id/Txt_informacion"
+            android:layout_marginTop="15dp"
+            android:layout_alignParentEnd="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:layout_below="@id/Txt_informacion"
+            android:layout_marginTop="15dp"
+            android:layout_alignParentEnd="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+    </RelativeLayout>
+
+    <!--
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/Btn_cerrar_sesion"
-        android:text="@string/Btn_cerrar_sesion"
+        android:id="@+id/Btn_cerrar_session"
+        android:text="@string/Btn_cerrar_session"
         android:textAllCaps="true"
         android:layout_centerInParent="true"
         android:layout_width="wrap_content"
         android:layout_height="@dimen/m_button_height"/>
+    -->
 
-</RelativeLayout>
+
+    <Button
+        android:id="@+id/btnCerrarSesion"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_margin="16dp"
+        android:text="Cerrar Sesión"
+        android:backgroundTint="#DC3545"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:padding="12dp" />
+
+
+</ScrollView>

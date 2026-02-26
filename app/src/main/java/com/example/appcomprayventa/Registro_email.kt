@@ -72,7 +72,7 @@ class Registro_email : AppCompatActivity() {
 
         firebaseAuth.createUserWithEmailAndPassword(email, password)
             .addOnSuccessListener {
-                llenarInfoDB()
+                llenarInfoBD()
             }
             .addOnFailureListener { exception ->
                 progressDialog.dismiss()
@@ -91,10 +91,10 @@ class Registro_email : AppCompatActivity() {
         }
     }
 
-    private fun llenarInfoDB() {
+    private fun llenarInfoBD() {
         progressDialog.setMessage("Guardando Informacion")
 
-        val tiempo = Constantes.obtenerTiemposDis()
+        val tiempo = Constantes.obtenerTiempoDis()
         val emailUsuario = firebaseAuth.currentUser!!.email
         val uidUsuario = firebaseAuth.uid
 
@@ -108,10 +108,10 @@ class Registro_email : AppCompatActivity() {
         hashMap["tiempo"] = tiempo
         hashMap["online"] = true
         hashMap["email"] = "${emailUsuario}"
-        hashMap["uis"] = "${uidUsuario}"
+        hashMap["uid"] = "${uidUsuario}"
         hashMap["fecha_nac"] = ""
 
-        val ref = FirebaseDatabase.getInstance().getReference("Usuarios")
+        val ref = FirebaseDatabase.getInstance().getReference("CompraVenta").child("Usuarios")
         ref.child(uidUsuario!!)
             .setValue(hashMap)
             .addOnSuccessListener {

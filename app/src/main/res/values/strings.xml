@@ -8,6 +8,9 @@
     <string name="Item_Cuenta">Cuenta</string>
     <string name="Item_Mis_Anuncios">Mis Anuncios</string>
 
+    <string name="default_web_client_id">532434749092-60nuaft6hjdbu3h19t6k7r5c1tgju2tt.apps.googleusercontent.com</string>
+
+
     <string name="TituloRL">Titulo</string>
 
     <string name="Ingresar_email">Ingresar con email</string>
@@ -25,5 +28,21 @@
     <string name="Btn_registrar">Registrarme</string>
 
     <string name="Btn_cerrar_sesion">Cerrar Sesion</string>
+
+    <!-- Perfil de usuario -->
+    <string name="Txt_perfil">Perfil de usuario</string>
+    <string name="Txt_informacion">Infomación: </string>
+    <string name="Txt_nombres">Nombres: </string>
+    <string name="Tv_nombres">Nombres completos</string>
+    <string name="Txt_email">Email: </string>
+    <string name="Tv_email">email@dominio.com</string>
+    <string name="Txt_nacimiento">Fecha de nac.: </string>
+    <string name="Tv_nacimiento">DD/MM/AAAA</string>
+    <string name="Txt_miembro">Miembro desde: </string>
+    <string name="Tv_miembro">DD/MM/AAAA</string>
+    <string name="Txt_telefono">Teléfono: </string>
+    <string name="Tv_telefono">0123456789</string>
+    <string name="Txt_estado_cuenta">Estado de cuenta: </string>
+    <string name="Tv_estado_cuenta">No verificado</string>
 
 </resources>
