@@ -27,7 +27,6 @@
     <string name="Et_r_password">Repeat Password</string>
     <string name="Btn_registrar">Registrarme</string>
 
-    <string name="Btn_cerrar_sesion">Cerrar Sesion</string>
 
     <!-- Perfil de usuario -->
     <string name="Txt_perfil">Perfil de usuario</string>
@@ -44,5 +43,10 @@
     <string name="Tv_telefono">0123456789</string>
     <string name="Txt_estado_cuenta">Estado de cuenta: </string>
     <string name="Tv_estado_cuenta">No verificado</string>
+
+    <string name="TxtOpciones">0pciones</string>
+    <string name="Btn_editar_perfil">Editar perfil</string>
+
+    <string name="Btn_cerrar_sesion">Cerrar Sesion</string>
 
 </resources>
