@@ -13,6 +13,7 @@ googleServicesversion = "4.4.3"
 firebaseAuthV = "24.0.1"
 firebaseDatabaseV = "22.0.1"
 loginGoogleV = "21.4.0"
+glide = "4.16.0"
 
 
 
@@ -28,6 +29,8 @@ androidx-constraintlayout = { group = "androidx.constraintlayout", name = "const
 firebaseAuth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuthV"}
 firebaseDatabase = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabaseV"}
 loginGoogle = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "loginGoogleV"}
+glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
+glide-compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glide" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
