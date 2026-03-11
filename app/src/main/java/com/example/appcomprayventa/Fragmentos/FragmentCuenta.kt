@@ -10,11 +10,16 @@ import android.widget.Toast
 import com.bumptech.glide.Glide
 import com.example.appcomprayventa.R
 import com.example.appcomprayventa.databinding.FragmentCuentaBinding
-import com.google.firebase.auth.FirebaseAuth
 import com.example.appcomprayventa.Opciones_Login.Login_email
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.ValueEventListener
+import com.example.appcomprayventa.Constantes
 
 class FragmentCuenta : Fragment() {
 
@@ -55,6 +60,8 @@ class FragmentCuenta : Fragment() {
         // Cargar la imagen aleatoria
         cargarImagenPerfil()
 
+
+        leerInfo()
 
         // Configurar botón de cerrar sesión
         binding.btnCerrarSesion.setOnClickListener {
@@ -154,5 +161,130 @@ class FragmentCuenta : Fragment() {
         super.onDestroyView()
         // LIMPIAR BINDING PARA EVITAR MEMORY LEAKS
         _binding = null
+    }
+
+    /*
+    private fun leerInfo(){
+        val ref = FirebaseDatabase.getInstance().getReference("Usuarios")
+        ref.child("${firebaseAuth.uid}")
+            .addValueEventListener(object: ValueEventListener){
+                override fun onDataChange(snapshot: DataSnapshot){
+                    val nombres = "${snapshot.child("nombres").value}"
+                    val email = "${snapshot.child("email").value}"
+                    val imagen = "${snapshot.child("urlImagenPerfil").value}"
+                    val f_nac = "${snapshot.child("fecha_nac").value}"
+                    val tiempo = "${snapshot.child("tiempo").value}"
+                    val telefono = "${snapshot.child("telefono").value}"
+                    val codTelefono = "${snapshot.child("codigoTelefono").value}"
+                    val proveedor = "${snapshot.child("proveedor").value}"
+
+                    val cod_tel = codTelefono + telefono
+
+                    if (tiempo == "null"){
+                        tiempo = "0"
+                    }
+
+                    val for_tiempo = Constantes.obtenerFecha(tiempo.toLong())
+
+                    binding.TvEmail.text = email
+                    binding.TvNombres.text = nombres
+                    binding.TvNacimiento.text = f_nac
+                    binding.TvTelefono.text = cod_tel
+                    binding.TvMiembro.text = for_tiempo
+
+                    try {
+                        Glide.with(mContext)
+                            .load(imagen)
+                            .placeholder(R.drawable.img_perfil)
+                            .into(binding.TvPerfil)
+                    }catch (e: Exception){
+                        Toast.makeText(mContext, "${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+
+                    if(proveedor == "Email"){
+                        val esVerificado = firebaseAuth.currentUser!!.isEmailVerified
+                        if(esVerificado){
+                            binding.TvEstadoCuenta.text = "Verificado"
+                        }else {
+                            binding.TvEstadoCuenta.text = "No Verificado"
+                        }
+                    }else{
+                        binding.TvEstadoCuenta.text = "Verificado"
+                    }
+
+                }
+                override fun onCancelled(error: DatabaseError){
+
+                }
+            }
+    }
+
+     */
+
+    private fun leerInfo() {
+        val ref = FirebaseDatabase.getInstance().getReference("Usuarios")
+
+        // CORRECCIÓN 1: Usar auth.uid en lugar de firebaseAuth.uid
+        ref.child("${auth.uid}")
+            // CORRECCIÓN 4: Abrir la llave dentro del paréntesis
+            .addValueEventListener(object : ValueEventListener {
+
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val nombres = "${snapshot.child("nombres").value}"
+                    val email = "${snapshot.child("email").value}"
+                    val imagen = "${snapshot.child("urlImagenPerfil").value}"
+                    val f_nac = "${snapshot.child("fecha_nac").value}"
+
+                    // CORRECCIÓN 3: Cambiar val por var para poder reasignarlo
+                    var tiempo = "${snapshot.child("tiempo").value}"
+
+                    val telefono = "${snapshot.child("telefono").value}"
+                    val codTelefono = "${snapshot.child("codigoTelefono").value}"
+                    val proveedor = "${snapshot.child("proveedor").value}"
+
+                    val cod_tel = codTelefono + telefono
+
+                    if (tiempo == "null") {
+                        tiempo = "0"
+                    }
+
+                    val for_tiempo = Constantes.obtenerFecha(tiempo.toLong())
+
+                    binding.TvEmail.text = email
+                    binding.TvNombres.text = nombres
+                    binding.TvNacimiento.text = f_nac
+                    binding.TvTelefono.text = cod_tel
+                    binding.TvMiembro.text = for_tiempo
+
+                    try {
+                        // CORRECCIÓN 2: Usar requireContext() en lugar de mContext
+                        Glide.with(requireContext())
+                            .load(imagen)
+                            .placeholder(R.drawable.img_perfil)
+                            .into(binding.TvPerfil)
+                    } catch (e: Exception) {
+                        // CORRECCIÓN 2: Usar requireContext() en el Toast también
+                        Toast.makeText(requireContext(), "${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+
+                    if (proveedor == "Email") {
+                        // CORRECCIÓN 1: Usar auth.currentUser
+                        // Usamos un safe call (?) por si es nulo
+                        val esVerificado = auth.currentUser?.isEmailVerified == true
+
+                        if (esVerificado) {
+                            binding.TvEstadoCuenta.text = "Verificado"
+                        } else {
+                            binding.TvEstadoCuenta.text = "No Verificado"
+                        }
+                    } else {
+                        binding.TvEstadoCuenta.text = "Verificado"
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    // Aquí puedes agregar un Toast o un Log si falla la lectura de la base de datos
+                }
+            }) // CORRECCIÓN 4: El paréntesis cierra hasta acá abajo
     }
 }
