@@ -49,4 +49,11 @@
 
     <string name="Btn_cerrar_sesion">Cerrar Sesion</string>
 
+    <string name = "Txt_editar_perfial">Editar Perfil</string>
+    <string name = "Et_nombres">Nombres completos</string>
+    <string name = "Et_f_nac">Fecha de nac.</string>
+    <string name = "Cod_tef">+00</string>
+    <string name = "Et_telefono">Telefono</string>
+    <string name = "Btn_actualizar">Actualizar</string>
+
 </resources>

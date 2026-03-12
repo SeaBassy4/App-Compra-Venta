@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.firebaseDatabase)
     implementation(libs.loginGoogle)
     implementation(libs.glide)
+    implementation(libs.ccp)
     annotationProcessor(libs.glide.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

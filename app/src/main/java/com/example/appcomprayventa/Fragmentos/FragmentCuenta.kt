@@ -222,7 +222,7 @@ class FragmentCuenta : Fragment() {
      */
 
     private fun leerInfo() {
-        val ref = FirebaseDatabase.getInstance().getReference("Usuarios")
+        val ref = FirebaseDatabase.getInstance().getReference("CompraVenta/Usuarios")
 
         // CORRECCIÓN 1: Usar auth.uid en lugar de firebaseAuth.uid
         ref.child("${auth.uid}")
