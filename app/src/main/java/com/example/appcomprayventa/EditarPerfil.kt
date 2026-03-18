@@ -20,5 +20,12 @@ class EditarPerfil : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityEditarPerfilBinding.inflate(layoutInflater)
        setContentView(binding.root)
+
+        firebaseAuth = FirebaseAuth.getInstance()
+        progressDialog = ProgressDialog(this)
+        progressDialog.setTitle("Por favor espere")
+        progressDialog.setCanceledOnTouchOutside(false)
+        
+        cargarInfo()
     }
 }
