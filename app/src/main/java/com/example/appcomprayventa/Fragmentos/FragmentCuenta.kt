@@ -20,6 +20,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.ValueEventListener
 import com.example.appcomprayventa.Constantes
+import com.example.appcomprayventa.EditarPerfil
 
 class FragmentCuenta : Fragment() {
 
@@ -62,6 +63,10 @@ class FragmentCuenta : Fragment() {
 
 
         leerInfo()
+
+        binding.BtnEditarPerfil.setOnClickListener {
+            startActivity(Intent(mContext, EditarPerfil::class.java))
+        }
 
         // Configurar botón de cerrar sesión
         binding.btnCerrarSesion.setOnClickListener {
