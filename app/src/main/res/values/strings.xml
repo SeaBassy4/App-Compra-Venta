@@ -56,4 +56,8 @@
     <string name = "Et_telefono">Telefono</string>
     <string name = "Btn_actualizar">Actualizar</string>
 
+    <string name = "item_uid">Uid</string>
+    <string name = "item_nombre">Nombre</string>
+    <string name = "item_email">Email</string>
+
 </resources>
