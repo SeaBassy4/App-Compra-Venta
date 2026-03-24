@@ -1,8 +1,12 @@
 package com.example.appcomprayventa
 
 import android.app.ProgressDialog
+import android.content.ContentValues
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.Menu
 import android.widget.PopupMenu
 import android.widget.Toast
@@ -24,6 +28,7 @@ class EditarPerfil : AppCompatActivity() {
     private lateinit var binding: ActivityEditarPerfilBinding
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var progressDialog: ProgressDialog
+    private var imagenUri: Uri?= null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -137,6 +142,8 @@ class EditarPerfil : AppCompatActivity() {
             }
         }
 
+
+
     private val concederPermisosAlmacenamiento =
         registerForActivityResult(
             ActivityResultContracts.RequestPermission()) { esConcedido ->
@@ -145,6 +152,69 @@ class EditarPerfil : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "El permiso de almacenamiento se denegó",
                     Toast.LENGTH_SHORT).show()
+            }
+        }
+
+
+    private fun imagenCamara() {
+        val contentValues = ContentValues()
+        contentValues.put(MediaStore.Images.Media.TITLE, "Titulo_imagen")
+        contentValues.put(MediaStore.Images.Media.DESCRIPTION, "Descripcion_imagen")
+        imagenUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, imagenUri)
+        resultadoCamara_ARL.launch(intent)
+
+    }
+
+    private val resultadoCamara_ARL =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()){resultado->
+            if(resultado.resultCode == RESULT_OK){
+                try{
+                    Glide.with(this)
+                        .load(imagenUri)
+                        .placeholder(R.drawable.img_perfil)
+                        .into(binding.imgPerfil)
+                }catch(e: Exception){
+
+                }
+            }else{
+                Toast.makeText(
+                    this,
+                    "La captura de imagen se canceló",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
+    private fun imagenGaleria(){
+        val intent = Intent(Intent.ACTION_PICK)
+        intent.type = "image/*"
+        resultadoGaleria_ARL.launch(intent)
+    }
+
+    private val resultadoGaleria_ARL =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()){resultado->
+            if(resultado.resultCode == RESULT_OK) {
+                val data = resultado.data
+                imagenUri = data!!.data
+
+                try {
+                    Glide.with(this)
+                        .load(imagenUri)
+                        .placeholder(R.drawable.img_perfil)
+                        .into(binding.imgPerfil)
+                }catch(e: Exception){
+
+                }
+            }else{
+                Toast.makeText(
+                    this,
+                    "La seleccion de imagen se canceló",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
 

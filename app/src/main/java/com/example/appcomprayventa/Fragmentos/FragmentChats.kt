@@ -1,5 +1,6 @@
 package com.example.appcomprayventa.Fragmentos
 
+import android.content.Context
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -10,26 +11,31 @@ import com.example.appcomprayventa.Modelos.Usuario
 import com.example.appcomprayventa.R
 import com.example.appcomprayventa.databinding.FragmentChatsBinding
 
-
 class FragmentChats : Fragment() {
 
-    private lateinit var binding: FragmentChatsBinding
+    private var _binding: FragmentChatsBinding? = null
+    private val binding get() = _binding!!
+
     private lateinit var mContext: Context
     private var usuarioAdaptador: AdaptadorUsuario? = null
     private var usuarioLista: List<Usuario>? = null
 
     override fun onAttach(context: Context) {
+        super.onAttach(context)
         mContext = context
-        super.onAttach(contex)
     }
 
-    override fun onCreteView(
+    override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        binding = FragmentChatsBinding.inflate(layoutInflater, container, false)
+    ): View {
+        _binding = FragmentChatsBinding.inflate(inflater, container, false)
         return binding.root
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 }

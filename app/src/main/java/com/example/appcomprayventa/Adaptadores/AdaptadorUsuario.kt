@@ -1,4 +1,5 @@
 package com.example.appcomprayventa.Adaptadores
+
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -10,49 +11,34 @@ import com.bumptech.glide.Glide
 import com.example.appcomprayventa.Modelos.Usuario
 import com.example.appcomprayventa.R
 
-class AdaptadorUsuario  (context: Context, listaUsuario: List<Usuario>)
-    : RecyclerView.Adapter<AdaptadorUsuario.ViewHolder?>() {
+class AdaptadorUsuario(private val context: Context, private val listaUsuarios: List<Usuario>)
+    : RecyclerView.Adapter<AdaptadorUsuario.ViewHolder>() {
 
-    private val context : Context
-
-    private val listaUsuarios : List<Usuario>
-
-    init {
-        this.context = context
-        this.listaUsuarios = listaUsuarios
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AdaptadorUsuario.ViewHolder {
-        val view : View = LayoutInflater.from(context).inflate(R.layout.item_usuario, parent, false)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view: View = LayoutInflater.from(context).inflate(R.layout.item_usuario, parent, false)
         return ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: AdaptadorUsuario.ViewHolder, position: Int) {
-        val usuario : Usuario = listaUsuarios[position]
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val usuario: Usuario = listaUsuarios[position]
         holder.uid.text = usuario.uid
         holder.email.text = usuario.email
         holder.nombres.text = usuario.nombres
-        Glide.with(context).load(usuario.imagen).placeholder(R.drawable.ic_imagen_perfil).into(holder.imagen)
+
+        Glide.with(context)
+            .load(usuario.imagen)
+            .placeholder(R.drawable.ic_imagen_perfil)
+            .into(holder.imagen)
     }
 
     override fun getItemCount(): Int {
-        TODO("Not yet implemented")
         return listaUsuarios.size
     }
 
-    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){}
-
-        var uid : TextView
-        var email : TextView
-        var nombres : TextView
-        var imagen : ImageView
-
-        init {
-            uid = itemView.findViewById(R.id.item_uid)
-            email = itemView.findViewById(R.id.item_email)
-            nombres = itemView.findViewById(R.id.item_nombre)
-            imagen = itemView.findViewById(R.id.item_imagen)
-
-        }
-
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val uid: TextView = itemView.findViewById(R.id.item_uid)
+        val email: TextView = itemView.findViewById(R.id.item_email)
+        val nombres: TextView = itemView.findViewById(R.id.item_nombre)
+        val imagen: ImageView = itemView.findViewById(R.id.item_imagen)
     }
+}
