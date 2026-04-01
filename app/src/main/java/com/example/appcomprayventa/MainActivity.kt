@@ -9,11 +9,13 @@ import com.example.appcomprayventa.Fragmentos.FragmentInicio
 import com.example.appcomprayventa.Fragmentos.FragmentMisAnuncios
 import com.example.appcomprayventa.databinding.ActivityMainBinding
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.storage.FirebaseStorage
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
     private lateinit var firebaseAuth: FirebaseAuth
+    private lateinit var firebaseStorage: FirebaseStorage
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
