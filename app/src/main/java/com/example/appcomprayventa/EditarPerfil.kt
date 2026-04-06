@@ -22,6 +22,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.FirebaseStorage
 
 class EditarPerfil : AppCompatActivity() {
 
@@ -78,9 +79,10 @@ class EditarPerfil : AppCompatActivity() {
                         val codigo = codTelefono.replace("+","").toInt()
                         binding.SelectorCod.setCountryForPhoneCode(codigo)
                     }catch(e:Exception){
+                        /*
                         Toast.makeText(this@EditarPerfil,
                             "${e.message}",
-                            Toast.LENGTH_SHORT).show()
+                            Toast.LENGTH_SHORT).show()*/
                     }
                 }
 
@@ -88,6 +90,50 @@ class EditarPerfil : AppCompatActivity() {
                     TODO("Not yet implemented")
                 }
             })
+    }
+
+    private fun subirImagenStorage() {
+        progressDialog.setMessage("Subiendo imagen de Storage")
+        progressDialog.show()
+
+        val rutaImagen = "imagenesPerfil/" + firebaseAuth.uid
+        val storageReference = FirebaseStorage.getInstance().getReference(rutaImagen)
+
+        storageReference.putFile(imagenUri!!)
+            .addOnSuccessListener { taskSnapshot ->
+                val uriTask = taskSnapshot.storage.downloadUrl
+                while (!uriTask.isSuccessful);
+                val urlImagenCargada = "${uriTask.result}"
+                if (uriTask.isSuccessful) {
+                    actualizarImagenBD(urlImagenCargada)
+                }
+            }
+            .addOnFailureListener { e ->
+                progressDialog.dismiss()
+                Toast.makeText(this, "${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun actualizarImagenBD(urlImagenCargada: String) {
+        progressDialog.setMessage("Actualizando imagen")
+        progressDialog.show()
+
+        val hashMap : HashMap<String, Any> = HashMap()
+        if(imagenUri != null){
+            hashMap["urlImagenPerfil"] = urlImagenCargada
+        }
+
+        val ref = FirebaseDatabase.getInstance().getReference("CompraVenta/Usuarios")
+        ref.child(firebaseAuth.uid!!)
+            .updateChildren(hashMap)
+            .addOnSuccessListener {
+                progressDialog.dismiss()
+                Toast.makeText(this, "Su imagen de perfil se ha actualizado", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                progressDialog.dismiss()
+                Toast.makeText(this, "${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun selec_imagen_de(){
@@ -172,14 +218,15 @@ class EditarPerfil : AppCompatActivity() {
         registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()){resultado->
             if(resultado.resultCode == RESULT_OK){
-                try{
+                subirImagenStorage()
+                /*try{
                     Glide.with(this)
                         .load(imagenUri)
                         .placeholder(R.drawable.img_perfil)
                         .into(binding.imgPerfil)
                 }catch(e: Exception){
 
-                }
+                }*/
             }else{
                 Toast.makeText(
                     this,
@@ -200,7 +247,8 @@ class EditarPerfil : AppCompatActivity() {
             if(resultado.resultCode == RESULT_OK) {
                 val data = resultado.data
                 imagenUri = data!!.data
-
+                subirImagenStorage()
+                /*
                 try {
                     Glide.with(this)
                         .load(imagenUri)
@@ -208,7 +256,7 @@ class EditarPerfil : AppCompatActivity() {
                         .into(binding.imgPerfil)
                 }catch(e: Exception){
 
-                }
+                }*/
             }else{
                 Toast.makeText(
                     this,

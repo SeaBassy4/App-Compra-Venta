@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "532434749092-t9mgkdn7fvrde22vljudg4dd414j7gu1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.appcomprayventa",
+            "certificate_hash": "99358361f14f1d32256919bbdbf4c2fe5bfd4a4e"
+          }
+        },
+        {
           "client_id": "532434749092-v4r4cgukk2g8etogh8hpdpcdj8i3pidb.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -51,6 +59,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "532434749092-ogoj6pemq6rdhjv7p196n79pdehjkkic.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.botanique",
+            "certificate_hash": "1470b44539b70c83c132e9a432226df0aaa44e83"
+          }
+        },
         {
           "client_id": "532434749092-uu8ju2vft90in1l08giggkfbbjf24u12.apps.googleusercontent.com",
           "client_type": 1,
