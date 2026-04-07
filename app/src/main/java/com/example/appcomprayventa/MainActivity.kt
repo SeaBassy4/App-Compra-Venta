@@ -3,6 +3,7 @@ package com.example.appcomprayventa
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.example.appcomprayventa.Anuncios.CrearAnuncio
 import com.example.appcomprayventa.Fragmentos.FragmentChats
 import com.example.appcomprayventa.Fragmentos.FragmentCuenta
 import com.example.appcomprayventa.Fragmentos.FragmentInicio
@@ -51,7 +52,13 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        binding.FAB.setOnClickListener {
+            startActivity(Intent(this, CrearAnuncio::class.java))
+        }
+
     }
+
+
 
     private fun comprobarSesion(){
         if(firebaseAuth.currentUser == null){
