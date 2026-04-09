@@ -34,11 +34,10 @@
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/RV_Imagenes"
-                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-                tools:listitem="@layout/item_imagenes_seleccionadas"
-                app:spanCount="4"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                android:orientation="horizontal" tools:listitem="@layout/item_imagenes_seleccionadas"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="120dp" />
 
             <!--Marca del artículo-->
             <com.google.android.material.textfield.TextInputLayout
