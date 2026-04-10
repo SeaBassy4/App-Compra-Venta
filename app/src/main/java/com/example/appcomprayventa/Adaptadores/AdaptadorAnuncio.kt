@@ -4,10 +4,10 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
+import androidx.viewpager2.widget.ViewPager2
+import com.example.appcomprayventa.Anuncios.DetalleAnuncio
 import com.example.appcomprayventa.Modelo.ModeloAnuncio
 import com.example.appcomprayventa.R
 import com.google.firebase.database.DataSnapshot
@@ -41,46 +41,64 @@ class AdaptadorAnuncio(
         holder.tvCategoria.text = modelo.categoria
         holder.tvCondicion.text = modelo.condicion
 
-        // Llamamos a la función para descargar y mostrar la primera imagen
-        cargarPrimeraImagen(modelo, holder)
+        // Llamamos a la nueva función para descargar TODAS las imágenes y armar el carrusel
+        cargarCarrusel(modelo, holder)
+        holder.itemView.setOnClickListener {
+            // Creamos un Intent para abrir la nueva actividad (que crearemos en el Paso 2)
+            val intent = android.content.Intent(context, DetalleAnuncio::class.java)
+
+            // Pasamos todos los datos del anuncio a la nueva pantalla
+            intent.putExtra("idAnuncio", modelo.idAnuncio)
+            intent.putExtra("titulo", modelo.titulo)
+            intent.putExtra("precio", modelo.precio)
+            intent.putExtra("condicion", modelo.condicion)
+            intent.putExtra("categoria", modelo.categoria)
+            intent.putExtra("marca", modelo.marca)
+            intent.putExtra("descripcion", modelo.descripcion)
+
+            context.startActivity(intent)
+        }
     }
 
-    private fun cargarPrimeraImagen(modelo: ModeloAnuncio, holder: HolderAnuncio) {
+    private fun cargarCarrusel(modelo: ModeloAnuncio, holder: HolderAnuncio) {
         val idAnuncio = modelo.idAnuncio
 
-        // Vamos a la ruta exacta donde están las imágenes de ESTE anuncio en específico
+        // Vamos a la ruta exacta donde están las imágenes de ESTE anuncio
         val refImagenes = FirebaseDatabase.getInstance().getReference("Anuncios")
             .child(idAnuncio).child("Imagenes")
 
-        // Usamos limitToFirst(1) para descargar SOLO la primera foto (ahorra datos y tiempo)
-        refImagenes.limitToFirst(1).addListenerForSingleValueEvent(object : ValueEventListener {
+        // Ya NO usamos limitToFirst(1), queremos descargar todas las fotos
+        refImagenes.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                if (snapshot.exists()) {
-                    // Extraemos la primera imagen de la lista de resultados
-                    val primeraImagenSnapshot = snapshot.children.first()
-                    val imagenUrl = primeraImagenSnapshot.child("imagenUrl").value.toString()
+                val listaUrls = ArrayList<String>()
 
-                    // Usamos Glide para pintar la imagen en el ImageView
+                if (snapshot.exists()) {
+                    // Recorremos todas las imágenes encontradas en Firebase
+                    for (ds in snapshot.children) {
+                        val imagenUrl = ds.child("imagenUrl").value.toString()
+                        listaUrls.add(imagenUrl)
+                    }
+
+                    // Inicializamos nuestro adaptador secundario y se lo pasamos al ViewPager2
                     try {
-                        Glide.with(context)
-                            .load(imagenUrl)
-                            .placeholder(R.drawable.agregar_img) // Imagen por defecto mientras carga
-                            .into(holder.ivAnuncio)
+                        val adaptadorCarrusel = AdaptadorCarrusel(context, listaUrls)
+                        holder.vpCarrusel.adapter = adaptadorCarrusel
                     } catch (e: Exception) {
-                        // Evita que la app falle si el fragmento se cierra mientras carga la imagen
+                        // Prevenir crasheos si la vista se destruye antes de que termine de cargar
                     }
                 }
             }
 
             override fun onCancelled(error: DatabaseError) {
-                // Aquí puedes manejar errores si lo deseas
+                // Manejo de errores
             }
         })
     }
 
     // Clase interna que mantiene las vistas del item_anuncio.xml
     inner class HolderAnuncio(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        var ivAnuncio: ImageView = itemView.findViewById(R.id.Iv_anuncio)
+        // Cambiamos el ImageView por el ViewPager2
+        var vpCarrusel: ViewPager2 = itemView.findViewById(R.id.VP_carrusel)
         var tvTitulo: TextView = itemView.findViewById(R.id.Tv_titulo)
         var tvPrecio: TextView = itemView.findViewById(R.id.Tv_precio)
         var tvCategoria: TextView = itemView.findViewById(R.id.Tv_categoria)
