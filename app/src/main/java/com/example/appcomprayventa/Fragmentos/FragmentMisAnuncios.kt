@@ -51,32 +51,40 @@ class FragmentMisAnuncios : Fragment() {
         val ref = FirebaseDatabase.getInstance().getReference("Anuncios")
 
         // Buscamos donde el hijo "uid" sea igual al ID de nuestro usuario
-        ref.orderByChild("uid").equalTo(uidActual)
-            .addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    // Limpiamos la lista antes de agregar nuevos datos
-                    anunciosArrayList.clear()
+        /*ref.orderByChild("uid").equalTo(uidActual)*/
+        ref.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                // =======================================================
+                // VALIDACIÓN DE SEGURIDAD PARA EVITAR CRASHEOS (ZOMBIE LISTENER)
+                if (!isAdded) return
+                // =======================================================
 
-                    // Recorremos todos los anuncios devueltos
-                    for (ds in snapshot.children) {
-                        try {
-                            val modeloAnuncio = ds.getValue(ModeloAnuncio::class.java)
-                            if (modeloAnuncio != null) {
-                                anunciosArrayList.add(modeloAnuncio)
-                            }
-                        } catch (e: Exception) {
-                            // Manejar posible error al parsear los datos
+                // Limpiamos la lista antes de agregar nuevos datos
+                anunciosArrayList.clear()
+
+                // Recorremos todos los anuncios devueltos
+                for (ds in snapshot.children) {
+                    try {
+                        val modeloAnuncio = ds.getValue(ModeloAnuncio::class.java)
+                        if (modeloAnuncio != null) {
+                            anunciosArrayList.add(modeloAnuncio)
                         }
+                    } catch (e: Exception) {
+                        // Manejar posible error al parsear los datos
                     }
-
-                    // Configurar el adaptador con la lista llena
-                    adaptadorAnuncio = AdaptadorAnuncio(requireContext(), anunciosArrayList)
-                    binding.RVMisAnuncios.adapter = adaptadorAnuncio
                 }
 
-                override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(requireContext(), "Error al cargar: ${error.message}", Toast.LENGTH_SHORT).show()
-                }
-            })
+                // Configurar el adaptador con la lista llena
+                adaptadorAnuncio = AdaptadorAnuncio(requireContext(), anunciosArrayList)
+                binding.RVMisAnuncios.adapter = adaptadorAnuncio
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // También protegemos aquí porque usas requireContext() para el Toast
+                if (!isAdded) return
+
+                Toast.makeText(requireContext(), "Error al cargar: ${error.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 }

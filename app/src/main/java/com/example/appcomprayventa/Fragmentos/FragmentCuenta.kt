@@ -110,6 +110,11 @@ class FragmentCuenta : Fragment() {
         if (uid != null) {
             ref.child(uid).addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
+                    // =======================================================
+                    // ESCUDO ANTI-CRASHEO: Evita el NullPointerException
+                    if (!isAdded || _binding == null) return
+                    // =======================================================
+
                     val nombres = "${snapshot.child("nombres").value}"
                     val email = "${snapshot.child("email").value}"
                     val imagen = "${snapshot.child("urlImagenPerfil").value}"
@@ -124,6 +129,7 @@ class FragmentCuenta : Fragment() {
                     if (tiempo == "null") { tiempo = "0" }
                     val for_tiempo = Constantes.obtenerFecha(tiempo.toLong())
 
+                    // Ahora es 100% seguro usar "binding"
                     binding.TvEmail.text = email
                     binding.TvNombres.text = nombres
                     binding.TvNacimiento.text = f_nac
@@ -147,7 +153,10 @@ class FragmentCuenta : Fragment() {
                     }
                 }
 
-                override fun onCancelled(error: DatabaseError) {}
+                override fun onCancelled(error: DatabaseError) {
+                    // Protegemos también aquí por si acaso
+                    if (!isAdded || _binding == null) return
+                }
             })
         }
     }
