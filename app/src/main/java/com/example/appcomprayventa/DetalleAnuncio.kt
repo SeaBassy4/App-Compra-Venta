@@ -229,7 +229,7 @@ class DetalleAnuncio : AppCompatActivity() {
                 }
 
                 // Configurar el adaptador para mostrar la lista
-                adaptadorComentario = AdaptadorComentario(this@DetalleAnuncio, comentariosArrayList)
+                adaptadorComentario = AdaptadorComentario(this@DetalleAnuncio, comentariosArrayList, idAnuncio)
                 binding.RVComentarios.adapter = adaptadorComentario
             }
 
