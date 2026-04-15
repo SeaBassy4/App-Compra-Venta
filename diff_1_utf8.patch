@@ -1,0 +1,962 @@
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+index 86d63e2..07c91ac 100644
+--- a/app/src/main/AndroidManifest.xml
++++ b/app/src/main/AndroidManifest.xml
+@@ -20,6 +20,11 @@
+         android:roundIcon="@mipmap/ic_compra_venta_foreground_round"
+         android:supportsRtl="true"
+         android:theme="@style/Theme.AppCompraYVenta">
++
++        <activity
++            android:name=".Anuncios.DetalleAnuncio"
++            android:exported="false" />
++
+         <activity
+             android:name=".Anuncios.CrearAnuncio"
+             android:exported="false" />
+@@ -31,19 +36,17 @@
+             android:exported="false" />
+         <activity
+             android:name=".Opciones_Login.Login_email"
+-            android:exported="false" /> <!-- Activity de inicio -->
+-        <activity
+-            android:name=".OpcionesLogin"
+-            android:exported="true">
+-            <intent-filter>
+-                <action android:name="android.intent.action.MAIN" />
++            android:exported="false" /> <activity
++        android:name=".OpcionesLogin"
++        android:exported="true">
++        <intent-filter>
++            <action android:name="android.intent.action.MAIN" />
+ 
+-                <category android:name="android.intent.category.LAUNCHER" />
+-            </intent-filter>
+-        </activity> <!-- Activity secundaria -->
+-        <activity
+-            android:name=".MainActivity"
+-            android:exported="true" />
++            <category android:name="android.intent.category.LAUNCHER" />
++        </intent-filter>
++    </activity> <activity
++        android:name=".MainActivity"
++        android:exported="true" />
+     </application>
+ 
+ </manifest>
+\ No newline at end of file
+diff --git a/app/src/main/java/com/example/appcomprayventa/Adaptadores/AdaptadorAnuncio.kt b/app/src/main/java/com/example/appcomprayventa/Adaptadores/AdaptadorAnuncio.kt
+new file mode 100644
+index 0000000..c1dc684
+--- /dev/null
++++ b/app/src/main/java/com/example/appcomprayventa/Adaptadores/AdaptadorAnuncio.kt
+@@ -0,0 +1,107 @@
++package com.example.appcomprayventa.Adaptadores
++
++import android.content.Context
++import android.view.LayoutInflater
++import android.view.View
++import android.view.ViewGroup
++import android.widget.TextView
++import androidx.recyclerview.widget.RecyclerView
++import androidx.viewpager2.widget.ViewPager2
++import com.example.appcomprayventa.Anuncios.DetalleAnuncio
++import com.example.appcomprayventa.Modelo.ModeloAnuncio
++import com.example.appcomprayventa.R
++import com.google.firebase.database.DataSnapshot
++import com.google.firebase.database.DatabaseError
++import com.google.firebase.database.FirebaseDatabase
++import com.google.firebase.database.ValueEventListener
++
++class AdaptadorAnuncio(
++    private val context: Context,
++    private val anunciosArrayList: ArrayList<ModeloAnuncio>
++) : RecyclerView.Adapter<AdaptadorAnuncio.HolderAnuncio>() {
++
++    // 1. Inflar (cargar) el diseño de item_anuncio.xml
++    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HolderAnuncio {
++        val view = LayoutInflater.from(context).inflate(R.layout.item_anuncio, parent, false)
++        return HolderAnuncio(view)
++    }
++
++    // 2. ¿Cuántos elementos hay en total?
++    override fun getItemCount(): Int {
++        return anunciosArrayList.size
++    }
++
++    // 3. Conectar los datos a la vista para una posición específica
++    override fun onBindViewHolder(holder: HolderAnuncio, position: Int) {
++        val modelo = anunciosArrayList[position]
++
++        // Setear datos en la interfaz
++        holder.tvTitulo.text = modelo.titulo
++        holder.tvPrecio.text = "$${modelo.precio}"
++        holder.tvCategoria.text = modelo.categoria
++        holder.tvCondicion.text = modelo.condicion
++
++        // Llamamos a la nueva función para descargar TODAS las imágenes y armar el carrusel
++        cargarCarrusel(modelo, holder)
++        holder.itemView.setOnClickListener {
++            // Creamos un Intent para abrir la nueva actividad (que crearemos en el Paso 2)
++            val intent = android.content.Intent(context, DetalleAnuncio::class.java)
++
++            // Pasamos todos los datos del anuncio a la nueva pantalla
++            intent.putExtra("idAnuncio", modelo.idAnuncio)
++            intent.putExtra("titulo", modelo.titulo)
++            intent.putExtra("precio", modelo.precio)
++            intent.putExtra("condicion", modelo.condicion)
++            intent.putExtra("categoria", modelo.categoria)
++            intent.putExtra("marca", modelo.marca)
++            intent.putExtra("descripcion", modelo.descripcion)
++
++            context.startActivity(intent)
++        }
++    }
++
++    private fun cargarCarrusel(modelo: ModeloAnuncio, holder: HolderAnuncio) {
++        val idAnuncio = modelo.idAnuncio
++
++        // Vamos a la ruta exacta donde están las imágenes de ESTE anuncio
++        val refImagenes = FirebaseDatabase.getInstance().getReference("Anuncios")
++            .child(idAnuncio).child("Imagenes")
++
++        // Ya NO usamos limitToFirst(1), queremos descargar todas las fotos
++        refImagenes.addListenerForSingleValueEvent(object : ValueEventListener {
++            override fun onDataChange(snapshot: DataSnapshot) {
++                val listaUrls = ArrayList<String>()
++
++                if (snapshot.exists()) {
++                    // Recorremos todas las imágenes encontradas en Firebase
++                    for (ds in snapshot.children) {
++                        val imagenUrl = ds.child("imagenUrl").value.toString()
++                        listaUrls.add(imagenUrl)
++                    }
++
++                    // Inicializamos nuestro adaptador secundario y se lo pasamos al ViewPager2
++                    try {
++                        val adaptadorCarrusel = AdaptadorCarrusel(context, listaUrls)
++                        holder.vpCarrusel.adapter = adaptadorCarrusel
++                    } catch (e: Exception) {
++                        // Prevenir crasheos si la vista se destruye antes de que termine de cargar
++                    }
++                }
++            }
++
++            override fun onCancelled(error: DatabaseError) {
++                // Manejo de errores
++            }
++        })
++    }
++
++    // Clase interna que mantiene las vistas del item_anuncio.xml
++    inner class HolderAnuncio(itemView: View) : RecyclerView.ViewHolder(itemView) {
++        // Cambiamos el ImageView por el ViewPager2
++        var vpCarrusel: ViewPager2 = itemView.findViewById(R.id.VP_carrusel)
++        var tvTitulo: TextView = itemView.findViewById(R.id.Tv_titulo)
++        var tvPrecio: TextView = itemView.findViewById(R.id.Tv_precio)
++        var tvCategoria: TextView = itemView.findViewById(R.id.Tv_categoria)
++        var tvCondicion: TextView = itemView.findViewById(R.id.Tv_condicion)
++    }
++}
+\ No newline at end of file
+diff --git a/app/src/main/java/com/example/appcomprayventa/Adaptadores/AdaptadorCarrusel.kt b/app/src/main/java/com/example/appcomprayventa/Adaptadores/AdaptadorCarrusel.kt
+new file mode 100644
+index 0000000..3669626
+--- /dev/null
++++ b/app/src/main/java/com/example/appcomprayventa/Adaptadores/AdaptadorCarrusel.kt
+@@ -0,0 +1,42 @@
++package com.example.appcomprayventa.Adaptadores
++
++import android.content.Context
++import android.view.LayoutInflater
++import android.view.View
++import android.view.ViewGroup
++import android.widget.ImageView
++import androidx.recyclerview.widget.RecyclerView
++import com.bumptech.glide.Glide
++import com.example.appcomprayventa.R
++
++class AdaptadorCarrusel(
++    private val context: Context,
++    private val listaUrls: ArrayList<String>
++) : RecyclerView.Adapter<AdaptadorCarrusel.HolderCarrusel>() {
++
++    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HolderCarrusel {
++        val view = LayoutInflater.from(context).inflate(R.layout.item_imagen_carrusel, parent, false)
++        return HolderCarrusel(view)
++    }
++
++    override fun getItemCount(): Int {
++        return listaUrls.size
++    }
++
++    override fun onBindViewHolder(holder: HolderCarrusel, position: Int) {
++        val urlImagen = listaUrls[position]
++
++        try {
++            Glide.with(context)
++                .load(urlImagen)
++                .placeholder(R.drawable.agregar_img)
++                .into(holder.ivCarruselItem)
++        } catch (e: Exception) {
++            // Manejar error de carga
++        }
++    }
++
++    inner class HolderCarrusel(itemView: View) : RecyclerView.ViewHolder(itemView) {
++        var ivCarruselItem: ImageView = itemView.findViewById(R.id.Iv_carrusel_item)
++    }
++}
+\ No newline at end of file
+diff --git a/app/src/main/java/com/example/appcomprayventa/Anuncios/CrearAnuncio.kt b/app/src/main/java/com/example/appcomprayventa/Anuncios/CrearAnuncio.kt
+index a1a48c7..93c0c38 100644
+--- a/app/src/main/java/com/example/appcomprayventa/Anuncios/CrearAnuncio.kt
++++ b/app/src/main/java/com/example/appcomprayventa/Anuncios/CrearAnuncio.kt
+@@ -1,19 +1,26 @@
+ package com.example.appcomprayventa.Anuncios
+ 
+ import android.app.ProgressDialog
++import android.content.ContentValues
++import android.content.Intent
+ import android.net.Uri
++import android.os.Build
+ import android.os.Bundle
++import android.provider.MediaStore
++import android.view.Menu
+ import android.widget.ArrayAdapter
+-import androidx.activity.enableEdgeToEdge
++import android.widget.PopupMenu
++import android.widget.Toast
++import androidx.activity.result.contract.ActivityResultContracts
+ import androidx.appcompat.app.AppCompatActivity
+-import androidx.core.view.ViewCompat
+-import androidx.core.view.WindowInsetsCompat
+ import com.example.appcomprayventa.Adaptadores.AdaptadorImagenSeleccionada
+ import com.example.appcomprayventa.Constantes
+ import com.example.appcomprayventa.Modelo.ModeloImagenSeleccionada
+ import com.example.appcomprayventa.R
+ import com.example.appcomprayventa.databinding.ActivityCrearAnuncioBinding
+ import com.google.firebase.auth.FirebaseAuth
++import com.google.firebase.database.FirebaseDatabase
++import com.google.firebase.storage.FirebaseStorage
+ 
+ class CrearAnuncio : AppCompatActivity() {
+     private lateinit var binding : ActivityCrearAnuncioBinding
+@@ -35,11 +42,236 @@ class CrearAnuncio : AppCompatActivity() {
+         progressDialog.setTitle("Por favor espere")
+         progressDialog.setCanceledOnTouchOutside(false)
+ 
++        // Configurar Spinners/Dropdowns
+         val adaptadorCat = ArrayAdapter(this, R.layout.item_categoria, Constantes.categorias)
+         binding.Categoria.setAdapter(adaptadorCat)
+ 
+         val adaptadorCon = ArrayAdapter(this, R.layout.item_condicion, Constantes.condiciones)
+         binding.Condicion.setAdapter(adaptadorCon)
++
++        // Inicializar lista y adaptador para el RecyclerView
++        imagenSelecArrayList = ArrayList()
++        cargarImagenes()
++
++        // 1. Botón para agregar imagen (Abre el menú Cámara/Galería)
++        binding.agregarImg.setOnClickListener {
++            if (imagenSelecArrayList.size >= 3) {
++                // Si ya hay 3 imágenes en la lista, mostramos un aviso y evitamos que siga
++                Toast.makeText(this, "Solo puedes agregar un máximo de 3 imágenes", Toast.LENGTH_SHORT).show()
++            } else {
++                // Si tiene menos de 3, le permitimos abrir el menú normalmente
++                selec_imagen_de()
++            }
++        }
++
++        // 2. Botón para crear el anuncio final
++        binding.BtnCrearAnuncio.setOnClickListener {
++            validarDatos()
++        }
++    }
++
++    private fun cargarImagenes() {
++        adaptadorImagenSel = AdaptadorImagenSeleccionada(this, imagenSelecArrayList)
++        binding.RVImagenes.adapter = adaptadorImagenSel
++    }
++
++    // =====================================================================
++    // LÓGICA DE SELECCIÓN DE IMÁGENES (Adaptada de EditarPerfil)
++    // =====================================================================
++
++    private fun selec_imagen_de(){
++        val popupMenu = PopupMenu(this, binding.agregarImg)
++
++        popupMenu.menu.add(Menu.NONE, 1, 1, "Cámara")
++        popupMenu.menu.add(Menu.NONE, 2, 2, "Galería")
++        popupMenu.show()
++
++        popupMenu.setOnMenuItemClickListener { item ->
++            val itemId = item.itemId
++            if(itemId == 1){
++                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
++                    concederPermisosCamara.launch(arrayOf(android.Manifest.permission.CAMERA))
++                } else{
++                    concederPermisosCamara.launch(arrayOf(
++                        android.Manifest.permission.CAMERA, android.Manifest.permission.WRITE_EXTERNAL_STORAGE
++                    ))
++                }
++            }else if (itemId == 2){
++                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
++                    imagenGaleria()
++                }else{
++                    concederPermisosAlmacenamiento.launch(
++                        android.Manifest.permission.WRITE_EXTERNAL_STORAGE
++                    )
++                }
++            }
++            return@setOnMenuItemClickListener true
++        }
++    }
++
++    private val concederPermisosCamara =
++        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { resultado ->
++            var concedidoTodos = true
++            for (seConcede in resultado.values) {
++                concedidoTodos = concedidoTodos && seConcede
++            }
++            if(concedidoTodos) {
++                imagenCamara()
++            } else{
++                Toast.makeText(this, "Permisos denegados", Toast.LENGTH_SHORT).show()
++            }
++        }
++
++    private val concederPermisosAlmacenamiento =
++        registerForActivityResult(ActivityResultContracts.RequestPermission()) { esConcedido ->
++            if(esConcedido) {
++                imagenGaleria()
++            } else {
++                Toast.makeText(this, "Permiso de almacenamiento denegado", Toast.LENGTH_SHORT).show()
++            }
++        }
++
++    private fun imagenCamara() {
++        val contentValues = ContentValues()
++        contentValues.put(MediaStore.Images.Media.TITLE, "Titulo_imagen")
++        contentValues.put(MediaStore.Images.Media.DESCRIPTION, "Descripcion_imagen")
++        imagenUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
++
++        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
++        intent.putExtra(MediaStore.EXTRA_OUTPUT, imagenUri)
++        resultadoCamara_ARL.launch(intent)
++    }
++
++    private val resultadoCamara_ARL =
++        registerForActivityResult(ActivityResultContracts.StartActivityForResult()){resultado->
++            if(resultado.resultCode == RESULT_OK){
++                agregarImagenALista()
++            }else{
++                Toast.makeText(this, "Cancelado", Toast.LENGTH_SHORT).show()
++            }
++        }
++
++    private fun imagenGaleria(){
++        val intent = Intent(Intent.ACTION_PICK)
++        intent.type = "image/*"
++        resultadoGaleria_ARL.launch(intent)
+     }
+ 
++    private val resultadoGaleria_ARL =
++        registerForActivityResult(ActivityResultContracts.StartActivityForResult()){resultado->
++            if(resultado.resultCode == RESULT_OK) {
++                val data = resultado.data
++                imagenUri = data!!.data
++                agregarImagenALista()
++            }else{
++                Toast.makeText(this, "Cancelado", Toast.LENGTH_SHORT).show()
++            }
++        }
++
++    // =====================================================================
++    // GUARDADO LOCAL DE IMÁGENES SELECCIONADAS
++    // =====================================================================
++
++    private fun agregarImagenALista() {
++        // ?.let asegura que el bloque de código solo se ejecute si imagenUri NO es nulo.
++        // Además, te da una variable segura llamada "uriSegura" que puedes usar.
++        imagenUri?.let { uriSegura ->
++            val modelo = ModeloImagenSeleccionada(
++                id = "${System.currentTimeMillis()}",
++                imagenUri = uriSegura, // Usamos la variable segura aquí
++                imagenUrl = null,
++                deInternet = false
++            )
++            imagenSelecArrayList.add(modelo)
++            adaptadorImagenSel.notifyDataSetChanged()
++        }
++    }
++
++    // =====================================================================
++    // SUBIDA A FIREBASE (DATOS + IMÁGENES)
++    // =====================================================================
++
++    private fun validarDatos() {
++        val marca = binding.EtMarca.text.toString().trim()
++        val categoria = binding.Categoria.text.toString().trim()
++        val condicion = binding.Condicion.text.toString().trim()
++        val precio = binding.EtPrecio.text.toString().trim()
++        val titulo = binding.EtTitulo.text.toString().trim()
++        val descripcion = binding.EtDescripcion.text.toString().trim()
++
++        if (titulo.isEmpty() || precio.isEmpty()) {
++            Toast.makeText(this, "Complete los campos obligatorios", Toast.LENGTH_SHORT).show()
++        } else if (imagenSelecArrayList.isEmpty()) {
++            Toast.makeText(this, "Debe agregar al menos una imagen", Toast.LENGTH_SHORT).show()
++        } else {
++            subirAnuncioYObtenerUrls(marca, categoria, condicion, precio, titulo, descripcion)
++        }
++    }
++
++    private fun subirAnuncioYObtenerUrls(marca: String, categoria: String, condicion: String, precio: String, titulo: String, descripcion: String) {
++        progressDialog.setMessage("Subiendo anuncio e imágenes...")
++        progressDialog.show()
++
++        val tiempo = System.currentTimeMillis()
++        val uidUsuario = firebaseAuth.uid!!
++        val idAnuncio = "$tiempo" // Usamos el timestamp como ID único del anuncio
++
++        // 1. Guardar la info básica del anuncio primero
++        val hashMap = HashMap<String, Any>()
++        hashMap["idAnuncio"] = idAnuncio
++        hashMap["uid"] = uidUsuario
++        hashMap["marca"] = marca
++        hashMap["categoria"] = categoria
++        hashMap["condicion"] = condicion
++        hashMap["precio"] = precio
++        hashMap["titulo"] = titulo
++        hashMap["descripcion"] = descripcion
++        hashMap["tiempo"] = tiempo
++
++        val refAnuncio = FirebaseDatabase.getInstance().getReference("Anuncios")
++        refAnuncio.child(idAnuncio).setValue(hashMap).addOnSuccessListener {
++            // 2. Una vez guardado el anuncio, subimos las imágenes
++            subirImagenes(idAnuncio)
++        }.addOnFailureListener { e ->
++            progressDialog.dismiss()
++            Toast.makeText(this, "Error al crear anuncio: ${e.message}", Toast.LENGTH_SHORT).show()
++        }
++    }
++
++    private fun subirImagenes(idAnuncio: String) {
++        // Recorremos la lista de imágenes seleccionadas
++        for (i in 0 until imagenSelecArrayList.size) {
++            val modeloImagen = imagenSelecArrayList[i]
++            val nombreImagen = modeloImagen.id // Usamos el ID que generamos al seleccionarla
++            val rutaImagen = "Anuncios/$idAnuncio/$nombreImagen"
++
++            val storageReference = FirebaseStorage.getInstance().getReference(rutaImagen)
++            storageReference.putFile(modeloImagen.imagenUri!!)
++                .addOnSuccessListener { taskSnapshot ->
++                    // 3. Obtenemos la URL de descarga
++                    taskSnapshot.storage.downloadUrl.addOnSuccessListener { uri ->
++                        val urlImagenCargada = uri.toString()
++                        guardarUrlImagenEnBD(idAnuncio, modeloImagen.id, urlImagenCargada, i == imagenSelecArrayList.size - 1)
++                    }
++                }
++                .addOnFailureListener {
++                    Toast.makeText(this, "Fallo al subir una imagen", Toast.LENGTH_SHORT).show()
++                }
++        }
++    }
++
++    private fun guardarUrlImagenEnBD(idAnuncio: String, idImagen: String, urlImagen: String, esLaUltima: Boolean) {
++        val hashMap = HashMap<String, Any>()
++        hashMap["id"] = idImagen
++        hashMap["imagenUrl"] = urlImagen
++
++        val ref = FirebaseDatabase.getInstance().getReference("Anuncios").child(idAnuncio).child("Imagenes")
++        ref.child(idImagen).setValue(hashMap).addOnSuccessListener {
++            if (esLaUltima) {
++                progressDialog.dismiss()
++                Toast.makeText(this, "Anuncio publicado con éxito", Toast.LENGTH_SHORT).show()
++                finish() // Cierra la actividad tras publicar
++            }
++        }
++    }
+ }
+\ No newline at end of file
+diff --git a/app/src/main/java/com/example/appcomprayventa/DetalleAnuncio.kt b/app/src/main/java/com/example/appcomprayventa/DetalleAnuncio.kt
+new file mode 100644
+index 0000000..029a86c
+--- /dev/null
++++ b/app/src/main/java/com/example/appcomprayventa/DetalleAnuncio.kt
+@@ -0,0 +1,68 @@
++package com.example.appcomprayventa.Anuncios // O donde hayas puesto tu clase
++
++import android.os.Bundle
++import androidx.appcompat.app.AppCompatActivity
++import com.example.appcomprayventa.Adaptadores.AdaptadorCarrusel
++import com.example.appcomprayventa.databinding.ActivityDetalleAnuncioBinding
++import com.google.firebase.database.DataSnapshot
++import com.google.firebase.database.DatabaseError
++import com.google.firebase.database.FirebaseDatabase
++import com.google.firebase.database.ValueEventListener
++
++class DetalleAnuncio : AppCompatActivity() {
++
++    private lateinit var binding: ActivityDetalleAnuncioBinding
++    private var idAnuncio = ""
++
++    override fun onCreate(savedInstanceState: Bundle?) {
++        super.onCreate(savedInstanceState)
++        binding = ActivityDetalleAnuncioBinding.inflate(layoutInflater)
++        setContentView(binding.root)
++
++        // 1. Obtener los datos pasados desde el Adaptador
++        idAnuncio = intent.getStringExtra("idAnuncio") ?: ""
++        val titulo = intent.getStringExtra("titulo")
++        val precio = intent.getStringExtra("precio")
++        val condicion = intent.getStringExtra("condicion")
++        val categoria = intent.getStringExtra("categoria")
++        val marca = intent.getStringExtra("marca")
++        val descripcion = intent.getStringExtra("descripcion")
++
++        // 2. Colocar los datos en los TextViews
++        binding.TvTituloDetalle.text = titulo
++        binding.TvPrecioDetalle.text = "$$precio"
++        binding.TvCondicionDetalle.text = "Condición: $condicion"
++        binding.TvCategoriaDetalle.text = "Categoría: $categoria"
++        binding.TvMarcaDetalle.text = "Marca: $marca"
++        binding.TvDescripcionDetalle.text = descripcion
++
++        // 3. Cargar las imágenes del carrusel
++        cargarImagenesCarrusel()
++    }
++
++    private fun cargarImagenesCarrusel() {
++        val refImagenes = FirebaseDatabase.getInstance().getReference("Anuncios")
++            .child(idAnuncio).child("Imagenes")
++
++        refImagenes.addListenerForSingleValueEvent(object : ValueEventListener {
++            override fun onDataChange(snapshot: DataSnapshot) {
++                val listaUrls = ArrayList<String>()
++
++                if (snapshot.exists()) {
++                    for (ds in snapshot.children) {
++                        val imagenUrl = ds.child("imagenUrl").value.toString()
++                        listaUrls.add(imagenUrl)
++                    }
++
++                    // Reutilizamos el adaptador de carrusel que creaste en el paso anterior
++                    val adaptadorCarrusel = AdaptadorCarrusel(this@DetalleAnuncio, listaUrls)
++                    binding.VPCarruselDetalle.adapter = adaptadorCarrusel
++                }
++            }
++
++            override fun onCancelled(error: DatabaseError) {
++                // Manejar error
++            }
++        })
++    }
++}
+\ No newline at end of file
+diff --git a/app/src/main/java/com/example/appcomprayventa/Fragmentos/FragmentMisAnuncios.kt b/app/src/main/java/com/example/appcomprayventa/Fragmentos/FragmentMisAnuncios.kt
+index f09ec6a..ee4c1d3 100644
+--- a/app/src/main/java/com/example/appcomprayventa/Fragmentos/FragmentMisAnuncios.kt
++++ b/app/src/main/java/com/example/appcomprayventa/Fragmentos/FragmentMisAnuncios.kt
+@@ -5,56 +5,78 @@ import androidx.fragment.app.Fragment
+ import android.view.LayoutInflater
+ import android.view.View
+ import android.view.ViewGroup
+-import com.example.appcomprayventa.R
+-
+-// TODO: Rename parameter arguments, choose names that match
+-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+-private const val ARG_PARAM1 = "param1"
+-private const val ARG_PARAM2 = "param2"
+-
+-/**
+- * A simple [Fragment] subclass.
+- * Use the [FragmentMisAnuncios.newInstance] factory method to
+- * create an instance of this fragment.
+- */
++import android.widget.Toast
++import androidx.recyclerview.widget.LinearLayoutManager
++import com.example.appcomprayventa.Adaptadores.AdaptadorAnuncio
++import com.example.appcomprayventa.Modelo.ModeloAnuncio
++import com.example.appcomprayventa.databinding.FragmentMisAnunciosBinding
++import com.google.firebase.auth.FirebaseAuth
++import com.google.firebase.database.DataSnapshot
++import com.google.firebase.database.DatabaseError
++import com.google.firebase.database.FirebaseDatabase
++import com.google.firebase.database.ValueEventListener
++
+ class FragmentMisAnuncios : Fragment() {
+-    // TODO: Rename and change types of parameters
+-    private var param1: String? = null
+-    private var param2: String? = null
+-
+-    override fun onCreate(savedInstanceState: Bundle?) {
+-        super.onCreate(savedInstanceState)
+-        arguments?.let {
+-            param1 = it.getString(ARG_PARAM1)
+-            param2 = it.getString(ARG_PARAM2)
+-        }
+-    }
++
++    // Usando ViewBinding para no tener que usar findViewById
++    private lateinit var binding: FragmentMisAnunciosBinding
++
++    private lateinit var firebaseAuth: FirebaseAuth
++    private lateinit var anunciosArrayList: ArrayList<ModeloAnuncio>
++    private lateinit var adaptadorAnuncio: AdaptadorAnuncio
+ 
+     override fun onCreateView(
+         inflater: LayoutInflater, container: ViewGroup?,
+         savedInstanceState: Bundle?
+-    ): View? {
+-        // Inflate the layout for this fragment
+-        return inflater.inflate(R.layout.fragment_mis_anuncios, container, false)
++    ): View {
++        binding = FragmentMisAnunciosBinding.inflate(inflater, container, false)
++        return binding.root
++    }
++
++    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
++        super.onViewCreated(view, savedInstanceState)
++
++        firebaseAuth = FirebaseAuth.getInstance()
++
++        cargarMisAnuncios()
+     }
+ 
+-    companion object {
+-        /**
+-         * Use this factory method to create a new instance of
+-         * this fragment using the provided parameters.
+-         *
+-         * @param param1 Parameter 1.
+-         * @param param2 Parameter 2.
+-         * @return A new instance of fragment FragmentMisAnuncios.
+-         */
+-        // TODO: Rename and change types and number of parameters
+-        @JvmStatic
+-        fun newInstance(param1: String, param2: String) =
+-            FragmentMisAnuncios().apply {
+-                arguments = Bundle().apply {
+-                    putString(ARG_PARAM1, param1)
+-                    putString(ARG_PARAM2, param2)
++    private fun cargarMisAnuncios() {
++        anunciosArrayList = ArrayList()
++
++        // Obtener el ID del usuario actual para descargar solo SUS anuncios
++        val uidActual = firebaseAuth.uid
++
++        // Referencia a la base de datos "Anuncios"
++        val ref = FirebaseDatabase.getInstance().getReference("Anuncios")
++
++        // Buscamos donde el hijo "uid" sea igual al ID de nuestro usuario
++        ref.orderByChild("uid").equalTo(uidActual)
++            .addValueEventListener(object : ValueEventListener {
++                override fun onDataChange(snapshot: DataSnapshot) {
++                    // Limpiamos la lista antes de agregar nuevos datos
++                    anunciosArrayList.clear()
++
++                    // Recorremos todos los anuncios devueltos
++                    for (ds in snapshot.children) {
++                        try {
++                            val modeloAnuncio = ds.getValue(ModeloAnuncio::class.java)
++                            if (modeloAnuncio != null) {
++                                anunciosArrayList.add(modeloAnuncio)
++                            }
++                        } catch (e: Exception) {
++                            // Manejar posible error al parsear los datos
++                        }
++                    }
++
++                    // Configurar el adaptador con la lista llena
++                    adaptadorAnuncio = AdaptadorAnuncio(requireContext(), anunciosArrayList)
++                    binding.RVMisAnuncios.adapter = adaptadorAnuncio
++                }
++
++                override fun onCancelled(error: DatabaseError) {
++                    Toast.makeText(requireContext(), "Error al cargar: ${error.message}", Toast.LENGTH_SHORT).show()
+                 }
+-            }
++            })
+     }
+ }
+\ No newline at end of file
+diff --git a/app/src/main/java/com/example/appcomprayventa/Modelo/ModeloAnuncio.kt b/app/src/main/java/com/example/appcomprayventa/Modelo/ModeloAnuncio.kt
+new file mode 100644
+index 0000000..c648dac
+--- /dev/null
++++ b/app/src/main/java/com/example/appcomprayventa/Modelo/ModeloAnuncio.kt
+@@ -0,0 +1,29 @@
++package com.example.appcomprayventa.Modelo
++
++class ModeloAnuncio {
++    var idAnuncio: String = ""
++    var uid: String = ""
++    var marca: String = ""
++    var categoria: String = ""
++    var condicion: String = ""
++    var precio: String = ""
++    var titulo: String = ""
++    var descripcion: String = ""
++    var tiempo: Long = 0
++
++    // Constructor vacío requerido por Firebase
++    constructor()
++
++    // Constructor con parámetros
++    constructor(idAnuncio: String, uid: String, marca: String, categoria: String, condicion: String, precio: String, titulo: String, descripcion: String, tiempo: Long) {
++        this.idAnuncio = idAnuncio
++        this.uid = uid
++        this.marca = marca
++        this.categoria = categoria
++        this.condicion = condicion
++        this.precio = precio
++        this.titulo = titulo
++        this.descripcion = descripcion
++        this.tiempo = tiempo
++    }
++}
+\ No newline at end of file
+diff --git a/app/src/main/res/layout/activity_crear_anuncio.xml b/app/src/main/res/layout/activity_crear_anuncio.xml
+index da81fa0..cb577db 100644
+--- a/app/src/main/res/layout/activity_crear_anuncio.xml
++++ b/app/src/main/res/layout/activity_crear_anuncio.xml
+@@ -34,11 +34,10 @@
+ 
+             <androidx.recyclerview.widget.RecyclerView
+                 android:id="@+id/RV_Imagenes"
+-                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+-                tools:listitem="@layout/item_imagenes_seleccionadas"
+-                app:spanCount="4"
++                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
++                android:orientation="horizontal" tools:listitem="@layout/item_imagenes_seleccionadas"
+                 android:layout_width="match_parent"
+-                android:layout_height="wrap_content"/>
++                android:layout_height="120dp" />
+ 
+             <!--Marca del artículo-->
+             <com.google.android.material.textfield.TextInputLayout
+diff --git a/app/src/main/res/layout/activity_detalle_anuncio.xml b/app/src/main/res/layout/activity_detalle_anuncio.xml
+new file mode 100644
+index 0000000..cc033f4
+--- /dev/null
++++ b/app/src/main/res/layout/activity_detalle_anuncio.xml
+@@ -0,0 +1,100 @@
++<?xml version="1.0" encoding="utf-8"?>
++<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    android:background="#F5F5F5">
++
++    <LinearLayout
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:orientation="vertical">
++
++        <androidx.viewpager2.widget.ViewPager2
++            android:id="@+id/VP_carrusel_detalle"
++            android:layout_width="match_parent"
++            android:layout_height="300dp"
++            android:background="@color/black"/>
++
++        <LinearLayout
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:orientation="vertical"
++            android:padding="20dp"
++            android:background="@color/white"
++            android:layout_marginTop="-15dp">
++
++            <TextView
++                android:id="@+id/Tv_titulo_detalle"
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:text="Título del Anuncio"
++                android:textSize="24sp"
++                android:textStyle="bold"
++                android:textColor="@color/black" />
++
++            <TextView
++                android:id="@+id/Tv_precio_detalle"
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:text="$0.00"
++                android:textSize="22sp"
++                android:textStyle="bold"
++                android:textColor="#388E3C"
++                android:layout_marginTop="8dp"/>
++
++            <View
++                android:layout_width="match_parent"
++                android:layout_height="1dp"
++                android:background="#E0E0E0"
++                android:layout_marginTop="15dp"
++                android:layout_marginBottom="15dp"/>
++
++            <TextView
++                android:id="@+id/Tv_marca_detalle"
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:text="Marca: "
++                android:textSize="16sp" />
++
++            <TextView
++                android:id="@+id/Tv_categoria_detalle"
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:text="Categoría: "
++                android:textSize="16sp"
++                android:layout_marginTop="5dp"/>
++
++            <TextView
++                android:id="@+id/Tv_condicion_detalle"
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:text="Condición: "
++                android:textSize="16sp"
++                android:layout_marginTop="5dp"/>
++
++            <View
++                android:layout_width="match_parent"
++                android:layout_height="1dp"
++                android:background="#E0E0E0"
++                android:layout_marginTop="15dp"
++                android:layout_marginBottom="15dp"/>
++
++            <TextView
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:text="Descripción"
++                android:textStyle="bold"
++                android:textSize="18sp"
++                android:textColor="@color/black"/>
++
++            <TextView
++                android:id="@+id/Tv_descripcion_detalle"
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:text="Aquí va la descripción completa del anuncio..."
++                android:textSize="16sp"
++                android:layout_marginTop="10dp"/>
++
++        </LinearLayout>
++    </LinearLayout>
++</ScrollView>
+\ No newline at end of file
+diff --git a/app/src/main/res/layout/fragment_mis_anuncios.xml b/app/src/main/res/layout/fragment_mis_anuncios.xml
+index b45ebb5..4fd3894 100644
+--- a/app/src/main/res/layout/fragment_mis_anuncios.xml
++++ b/app/src/main/res/layout/fragment_mis_anuncios.xml
+@@ -1,14 +1,18 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
++<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
+     xmlns:tools="http://schemas.android.com/tools"
+     android:layout_width="match_parent"
+     android:layout_height="match_parent"
++    android:background="#F3F4F6"
+     tools:context=".Fragmentos.FragmentMisAnuncios">
+ 
+-    <!-- TODO: Update blank fragment layout -->
+-    <TextView
++    <androidx.recyclerview.widget.RecyclerView
++        android:id="@+id/RV_MisAnuncios"
+         android:layout_width="match_parent"
+         android:layout_height="match_parent"
+-        android:text="MIS ANUNCIOS" />
++        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
++        android:padding="8dp"
++        android:clipToPadding="false"/>
+ 
+-</FrameLayout>
+\ No newline at end of file
++</RelativeLayout>
+\ No newline at end of file
+diff --git a/app/src/main/res/layout/item_anuncio.xml b/app/src/main/res/layout/item_anuncio.xml
+new file mode 100644
+index 0000000..744be26
+--- /dev/null
++++ b/app/src/main/res/layout/item_anuncio.xml
+@@ -0,0 +1,65 @@
++<?xml version="1.0" encoding="utf-8"?>
++<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
++    android:layout_width="match_parent"
++    android:layout_height="wrap_content"
++    android:layout_margin="8dp"
++    app:cardCornerRadius="10dp"
++    app:cardElevation="4dp">
++
++    <LinearLayout
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:orientation="vertical">
++
++        <androidx.viewpager2.widget.ViewPager2
++            android:id="@+id/VP_carrusel"
++            android:layout_width="match_parent"
++            android:layout_height="180dp" /> <LinearLayout
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:orientation="vertical"
++        android:padding="12dp">
++
++        <TextView
++            android:id="@+id/Tv_titulo"
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:text="Título"
++            android:textSize="18sp"
++            android:textStyle="bold"
++            android:textColor="@color/black" />
++
++        <TextView
++            android:id="@+id/Tv_precio"
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:text="$0.00"
++            android:textSize="16sp"
++            android:textColor="#388E3C"
++            android:layout_marginTop="4dp"/>
++
++        <RelativeLayout
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:layout_marginTop="8dp">
++
++            <TextView
++                android:id="@+id/Tv_categoria"
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:text="Categoría"
++                android:textSize="12sp" />
++
++            <TextView
++                android:id="@+id/Tv_condicion"
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:layout_alignParentEnd="true"
++                android:text="Condición"
++                android:textSize="12sp"
++                android:textStyle="italic"/>
++        </RelativeLayout>
++    </LinearLayout>
++    </LinearLayout>
++</androidx.cardview.widget.CardView>
+\ No newline at end of file
+diff --git a/app/src/main/res/layout/item_imagen_carrusel.xml b/app/src/main/res/layout/item_imagen_carrusel.xml
+new file mode 100644
+index 0000000..46bab26
+--- /dev/null
++++ b/app/src/main/res/layout/item_imagen_carrusel.xml
+@@ -0,0 +1,7 @@
++<?xml version="1.0" encoding="utf-8"?>
++<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
++    android:id="@+id/Iv_carrusel_item"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    android:scaleType="centerCrop"
++    android:src="@drawable/agregar_img"/>
+\ No newline at end of file
