@@ -29,6 +29,18 @@ class AdaptadorUsuario(private val context: Context, private val listaUsuarios: 
             .load(usuario.imagen)
             .placeholder(R.drawable.ic_imagen_perfil)
             .into(holder.imagen)
+
+        holder.itemView.setOnClickListener {
+            val intent = Intent(context, ChatActivity::class.java)
+            intent.putExtra("uid", holder.uid.text)
+            Toast.makeText(
+                context,
+                "Has seleccionado al usuario: ${holder.nombres.text}",
+                Toast.LENGTH_SHORT
+            ).show()
+            context.startActivity(intent)
+        }
+
     }
 
     override fun getItemCount(): Int {

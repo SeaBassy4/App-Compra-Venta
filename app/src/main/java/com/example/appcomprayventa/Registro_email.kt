@@ -41,12 +41,19 @@ class Registro_email : AppCompatActivity() {
     private var password = ""
     private var r_password = ""
 
+    private var nombre = ""
+
     private fun validarInfo() {
         email = binding.EtEmail.text.toString().trim()
         password = binding.EtPassword.text.toString().trim()
         r_password = binding.EtRPassword.text.toString().trim()
+        nombre = binding.EtNombre.text.toString().trim()
 
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        if (nombre.isEmpty()) {
+            binding.EtNombre.error = "Ingrese su nombre" // Esto hace que el campo sea "Obligatorio"
+            binding.EtNombre.requestFocus()
+        }
+        else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             binding.EtEmail.error = "Formato de correo incorrecto"
             binding.EtEmail.requestFocus()
         } else if (email.isEmpty()) {
@@ -99,7 +106,7 @@ class Registro_email : AppCompatActivity() {
         val uidUsuario = firebaseAuth.uid
 
         val hashMap = HashMap<String, Any>()
-        hashMap["nombres"] = ""
+        hashMap["nombres"] = nombre
         hashMap["codigoTelefono"] = ""
         hashMap["telefono"] = ""
         hashMap["urlImagenPerfil"] = ""

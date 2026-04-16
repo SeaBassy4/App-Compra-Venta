@@ -23,6 +23,7 @@
     <string name="Txt_no_cuenta">¿No tienes una cuenta?</string>
     <string name="Txt_registrarme">REGISTRARME</string>
 
+
     <string name="Txt_registro">Registro de usuario"</string>
     <string name="Et_r_password">Repeat Password</string>
     <string name="Btn_registrar">Registrarme</string>
@@ -69,6 +70,15 @@
     <string name="item_nombre">Nombre</string>
     <string name="item_email">Email</string>
     <string name="tvSinUsuarios">No hay más usuarios</string>
+    <string name="Et_buscar_usuario">Buscar Usuario</string>
 
+    <string name="Txt_nombre_usuario">Nombres</string>
+    <string name="Et_mensaje_chat">Escriba algo</string>
+    <string name="Tv_tiempo_mensaje">dd/MM/yyyy hh:mm</string>
+
+
+
+
+    <string name="Et_nombre">Nombres completos</string>
 
 </resources>
