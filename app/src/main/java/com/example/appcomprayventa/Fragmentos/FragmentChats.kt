@@ -111,7 +111,7 @@ class FragmentChats : Fragment() {
         // Obtenemos el uid del usuario actual y gestionamos la búsqueda a través del nombre
         val firebaseUser = FirebaseAuth.getInstance().currentUser!!.uid
         val reference = FirebaseDatabase.getInstance().reference
-            .child("Usuarios")
+            .child("CompraVenta/Usuarios")
             .orderByChild("nombres")
             .startAt(usuario)
             .endAt(usuario + "\uf8ff")

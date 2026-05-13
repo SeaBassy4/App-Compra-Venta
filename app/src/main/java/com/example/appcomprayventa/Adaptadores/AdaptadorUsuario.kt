@@ -8,6 +8,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import android.content.Intent
+import android.widget.Toast
+import com.example.appcomprayventa.Chat.ChatActivity
 import com.example.appcomprayventa.Modelos.Usuario
 import com.example.appcomprayventa.R
 
