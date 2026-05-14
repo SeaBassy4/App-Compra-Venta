@@ -14,8 +14,10 @@ import com.example.appcomprayventa.Chat.ChatActivity
 import com.example.appcomprayventa.Modelos.Usuario
 import com.example.appcomprayventa.R
 
-class AdaptadorUsuario(private val context: Context, private val listaUsuarios: List<Usuario>)
-    : RecyclerView.Adapter<AdaptadorUsuario.ViewHolder>() {
+class AdaptadorUsuario(
+    private val context: Context,
+    private val listaUsuarios: List<Usuario>
+) : RecyclerView.Adapter<AdaptadorUsuario.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view: View = LayoutInflater.from(context).inflate(R.layout.item_usuario, parent, false)
@@ -29,21 +31,20 @@ class AdaptadorUsuario(private val context: Context, private val listaUsuarios: 
         holder.nombres.text = usuario.nombres
 
         Glide.with(context)
-            .load(usuario.imagen)
+            .load(usuario.urlImagenPerfil)
             .placeholder(R.drawable.ic_imagen_perfil)
             .into(holder.imagen)
 
         holder.itemView.setOnClickListener {
             val intent = Intent(context, ChatActivity::class.java)
-            intent.putExtra("uid", holder.uid.text)
+            intent.putExtra("uid", usuario.uid)
             Toast.makeText(
                 context,
-                "Has seleccionado al usuario: ${holder.nombres.text}",
+                "Has seleccionado al usuario: ${usuario.nombres}",
                 Toast.LENGTH_SHORT
             ).show()
             context.startActivity(intent)
         }
-
     }
 
     override fun getItemCount(): Int {

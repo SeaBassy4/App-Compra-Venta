@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.appcomprayventa.Adaptadores.AdaptadorChat
 import com.example.appcomprayventa.Constantes
 import com.example.appcomprayventa.Modelos.Chat
+import com.example.appcomprayventa.R
 import com.example.appcomprayventa.databinding.ActivityChatBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -32,6 +33,12 @@ class ChatActivity : AppCompatActivity() {
 
     private var chatRuta = ""
     private var imagenUri : Uri?= null
+
+    private var isBlockedByMe = false
+    private var isBlockedByHim = false
+
+    private var myBlocksListener: ValueEventListener? = null
+    private var hisBlocksListener: ValueEventListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,10 +72,90 @@ class ChatActivity : AppCompatActivity() {
             validarMensaje()
         }
 
+        binding.IbBloquear.setOnClickListener {
+            if (isBlockedByMe) {
+                unblockUser()
+            } else {
+                blockUser()
+            }
+        }
+
+        checkBlockingStatus()
         cargarInfo()
         cargarMensajes()
     }
 
+
+    private fun checkBlockingStatus() {
+        val refMyBlocks = FirebaseDatabase.getInstance().getReference("CompraVenta/Usuarios").child(miUid).child("Bloqueados")
+        myBlocksListener = refMyBlocks.child(uid).addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                isBlockedByMe = snapshot.exists()
+                updateUI()
+            }
+            override fun onCancelled(error: DatabaseError) {}
+        })
+
+        val refHisBlocks = FirebaseDatabase.getInstance().getReference("CompraVenta/Usuarios").child(uid).child("Bloqueados")
+        hisBlocksListener = refHisBlocks.child(miUid).addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                isBlockedByHim = snapshot.exists()
+                updateUI()
+            }
+            override fun onCancelled(error: DatabaseError) {}
+        })
+    }
+
+    private fun updateUI() {
+        if (!::binding.isInitialized) return
+
+        if (isBlockedByMe || isBlockedByHim) {
+            binding.RLMensaje.visibility = android.view.View.GONE
+            binding.TvBloqueado.visibility = android.view.View.VISIBLE
+            
+            if (isBlockedByMe && isBlockedByHim) {
+                binding.TvBloqueado.text = "Ambos se han bloqueado mutuamente"
+            } else if (isBlockedByMe) {
+                binding.TvBloqueado.text = "Has bloqueado a este usuario"
+            } else {
+                binding.TvBloqueado.text = "Este usuario te ha bloqueado"
+            }
+        } else {
+            binding.RLMensaje.visibility = android.view.View.VISIBLE
+            binding.TvBloqueado.visibility = android.view.View.GONE
+        }
+
+        // Always update the block button icon/color based on MY action
+        if (isBlockedByMe) {
+            binding.IbBloquear.setImageResource(R.drawable.ic_bloquear)
+            binding.IbBloquear.setColorFilter(android.graphics.Color.RED)
+        } else {
+            binding.IbBloquear.setImageResource(R.drawable.ic_bloquear)
+            binding.IbBloquear.setColorFilter(android.graphics.Color.BLACK)
+        }
+    }
+
+    private fun blockUser() {
+        val ref = FirebaseDatabase.getInstance().getReference("CompraVenta/Usuarios").child(miUid).child("Bloqueados")
+        ref.child(uid).setValue(true)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Usuario bloqueado", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error al bloquear: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun unblockUser() {
+        val ref = FirebaseDatabase.getInstance().getReference("CompraVenta/Usuarios").child(miUid).child("Bloqueados")
+        ref.child(uid).removeValue()
+            .addOnSuccessListener {
+                Toast.makeText(this, "Usuario desbloqueado", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error al desbloquear: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
 
     private fun cargarMensajes() {
         val mensajesArrayList = ArrayList<Chat>()
@@ -76,6 +163,7 @@ class ChatActivity : AppCompatActivity() {
         ref.child(chatRuta)
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
+                    if (!::binding.isInitialized) return
                     mensajesArrayList.clear()
                     for (ds : DataSnapshot in snapshot.children) {
                         try {
@@ -139,16 +227,19 @@ class ChatActivity : AppCompatActivity() {
         val tiempo = Constantes.obtenerTiempoDis()
         val nombreRutaImg = "CompraVenta/ImagenesChat/$tiempo"
         val storageRef = FirebaseStorage.getInstance().getReference(nombreRutaImg)
+        
         storageRef.putFile(imagenUri!!)
             .addOnSuccessListener { taskSnapshot ->
-                val uriTask = taskSnapshot.storage.downloadUrl
-                while (!uriTask.isSuccessful);
-                var urlImagen = uriTask.result.toString()
-                if (uriTask.isSuccessful) {
+                taskSnapshot.storage.downloadUrl.addOnSuccessListener { uri ->
+                    val urlImagen = uri.toString()
                     enviarMensaje(Constantes.MENSAJE_TIPO_IMAGEN, urlImagen, tiempo)
+                }.addOnFailureListener { e ->
+                    progressDialog.dismiss()
+                    Toast.makeText(this, "Error al obtener URL: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
             .addOnFailureListener { e ->
+                progressDialog.dismiss()
                 Toast.makeText(this,
                     "No se pudo enviar la imagen debido a ${e.message}",
                     Toast.LENGTH_SHORT).show()
@@ -197,4 +288,16 @@ class ChatActivity : AppCompatActivity() {
                 ).show()
             }
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        myBlocksListener?.let {
+            FirebaseDatabase.getInstance().getReference("CompraVenta/Usuarios").child(miUid).child("Bloqueados").removeEventListener(it)
+        }
+        hisBlocksListener?.let {
+            FirebaseDatabase.getInstance().getReference("CompraVenta/Usuarios").child(uid).child("Bloqueados").removeEventListener(it)
+        }
+    }
+
+
 }

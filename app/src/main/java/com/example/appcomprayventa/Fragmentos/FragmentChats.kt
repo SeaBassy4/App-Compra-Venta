@@ -2,17 +2,15 @@ package com.example.appcomprayventa.Fragmentos
 
 import android.content.Context
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.core.widget.doOnTextChanged
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.appcomprayventa.Adaptadores.AdaptadorUsuario
 import com.example.appcomprayventa.Modelos.Usuario
-import com.example.appcomprayventa.R
 import com.example.appcomprayventa.databinding.FragmentChatsBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -26,8 +24,8 @@ class FragmentChats : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var mContext: Context
+    private var usuarioLista: MutableList<Usuario> = mutableListOf()
     private var usuarioAdaptador: AdaptadorUsuario? = null
-    private var usuarioLista: List<Usuario>? = null
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -35,81 +33,60 @@ class FragmentChats : Fragment() {
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
+        inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
-
         _binding = FragmentChatsBinding.inflate(inflater, container, false)
-
-        binding.RVUsuarios.setHasFixedSize(true)
-        binding.RVUsuarios.layoutManager = LinearLayoutManager(mContext)
-
-        usuarioLista = ArrayList()
-
-        binding.EtBuscarUsuario.doOnTextChanged { usuario, start, before, count ->
-            buscarUsuario(usuario = usuario.toString())
-        }
-
-        listarUsuarios()
-
         return binding.root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        listarUsuarios()
+
+        binding.etBuscarUsuario.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                buscarUsuario(s.toString().lowercase())
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+    }
+
+
     private fun listarUsuarios() {
-        val firebaseUser = FirebaseAuth.getInstance().currentUser!!.uid
+        val firebaseUser = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val reference = FirebaseDatabase.getInstance().reference.child("CompraVenta/Usuarios").orderByChild("nombres")
 
         reference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                // Aquí va la lógica para procesar los datos
-                (usuarioLista as ArrayList<Usuario>).clear()
-
+                if (_binding == null || !isAdded) return
+                usuarioLista.clear()
                 for (sn in snapshot.children) {
-                    val usuario : Usuario? = sn.getValue(Usuario::class.java)
-
-                    // Filtramos para no mostrarnos a nosotros mismos
-                    if (!(usuario!!.uid).equals(firebaseUser)) {
-                        (usuarioLista as ArrayList<Usuario>).add(usuario)
+                    try {
+                        val usuario : Usuario? = sn.getValue(Usuario::class.java)
+                        if (usuario != null && usuario.uid != firebaseUser) {
+                            usuarioLista.add(usuario)
+                        } else if (usuario == null) {
+                            Log.w("FirebaseError", "Usuario nulo en snapshot: ${sn.key}")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("FirebaseError", "Error al convertir usuario ${sn.key}: ${e.message}")
                     }
                 }
-
-                // Si la lista está vacía, mostramos el mensaje y ocultamos el RecyclerView
-                if ((usuarioLista as java.util.ArrayList<Usuario>).isEmpty()) {
-                    binding.tvSinUsuarios.visibility = View.VISIBLE
-                    binding.RVUsuarios.visibility = View.GONE
-
-                // Si hay más usuarios, ocultamos el mensaje y mostramos la lista
-                } else {
-                    binding.tvSinUsuarios.visibility = View.GONE
-                    binding.RVUsuarios.visibility = View.VISIBLE
-
-                    //actualizamos el adaptador
-
-                    usuarioAdaptador = AdaptadorUsuario(mContext, usuarioLista!!)
-                    binding.RVUsuarios.adapter = usuarioAdaptador
-                }
+                Log.d("FirebaseDebug", "Usuarios cargados: ${usuarioLista.size}")
+                actualizarAdaptador()
             }
 
             override fun onCancelled(error: DatabaseError) {
-                // Manejo de errores
-                TODO("Not yet implemented")
-
                 Log.e("FirebaseError", "Error al leer usuarios: ${error.message}")
-                Toast.makeText(
-                    mContext,
-                    "Error al cargar datos: ${error.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
-
             }
         })
     }
 
     private fun buscarUsuario(usuario : String) {
-        // Obtenemos el uid del usuario actual y gestionamos la búsqueda a través del nombre
-        val firebaseUser = FirebaseAuth.getInstance().currentUser!!.uid
+        val firebaseUser = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val reference = FirebaseDatabase.getInstance().reference
             .child("CompraVenta/Usuarios")
             .orderByChild("nombres")
@@ -118,27 +95,38 @@ class FragmentChats : Fragment() {
 
         reference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                (usuarioLista as ArrayList<Usuario>).clear()
-
+                if (_binding == null || !isAdded) return
+                usuarioLista.clear()
                 for (ss in snapshot.children) {
-                    val usuario : Usuario? = ss.getValue(Usuario::class.java)
-
-                    // Filtramos para no buscarnos a nosotros mismos
-                    if (!(usuario!!.uid).equals(firebaseUser)) {
-                        (usuarioLista as ArrayList<Usuario>).add(usuario)
+                    try {
+                        val user : Usuario? = ss.getValue(Usuario::class.java)
+                        if (user != null && user.uid != firebaseUser) {
+                            usuarioLista.add(user)
+                        }
+                    } catch (e: Exception) {
+                        Log.e("FirebaseError", "Error al buscar usuario: ${e.message}")
                     }
                 }
-
-                // Actualizamos el adaptador
-                usuarioAdaptador = AdaptadorUsuario(context!!, usuarioLista!!)
-                binding.RVUsuarios.adapter = usuarioAdaptador
+                actualizarAdaptador()
             }
-
-            override fun onCancelled(error: DatabaseError) {
-                Log.e("FirebaseError", "Error al buscar a los usuarios: ${error.message}")
-                Toast.makeText(mContext, "Error al buscar: ${error.message}", Toast.LENGTH_SHORT).show()
-            }
+            override fun onCancelled(error: DatabaseError) {}
         })
+    }
+
+    private fun actualizarAdaptador() {
+        if (_binding == null || !isAdded) return
+        
+        if (usuarioLista.isEmpty()) {
+            binding.tvSinUsuarios.visibility = View.VISIBLE
+            binding.rvUsuarios.visibility = View.GONE
+        } else {
+            binding.tvSinUsuarios.visibility = View.GONE
+            binding.rvUsuarios.visibility = View.VISIBLE
+
+            val currentContext = context ?: mContext
+            usuarioAdaptador = AdaptadorUsuario(currentContext, usuarioLista)
+            binding.rvUsuarios.adapter = usuarioAdaptador
+        }
     }
 
     override fun onDestroyView() {

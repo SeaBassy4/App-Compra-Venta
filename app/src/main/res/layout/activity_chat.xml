@@ -40,6 +40,17 @@
             android:text="@string/Txt_nombre_usuario"
             android:textStyle="bold" />
 
+        <ImageButton
+            android:id="@+id/IbBloquear"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="10dp"
+            android:background="@android:color/transparent"
+            android:padding="10dp"
+            android:src="@drawable/ic_bloquear" />
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
@@ -53,59 +64,78 @@
         android:id="@+id/chatsRV"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         android:layout_below="@id/ToolbarRLChat"
-        android:layout_above="@id/View2"
+        android:layout_above="@id/BottomBarLL"
         android:padding="5dp"
         tools:listitem="@layout/item_chat_izquierdo"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
-    <!-- Menú Inferior -->
-    <RelativeLayout
-        android:id="@+id/RLMensaje"
+    <!-- Contenedor Inferior -->
+    <LinearLayout
+        android:id="@+id/BottomBarLL"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_margin="5dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:orientation="vertical">
 
-        <EditText
-            android:id="@+id/Et_mensaje_chat"
-            android:hint="@string/Et_mensaje_chat"
-            android:padding="10dp"
-            android:inputType="textMultiLine|textCapSentences"
-            android:layout_centerVertical="true"
-            android:layout_toStartOf="@+id/adjuntarFAB"
+        <View
+            android:id="@+id/View2"
+            android:background="#ccc"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="1dp"/>
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/adjuntarFAB"
-            android:layout_width="wrap_content"
+        <RelativeLayout
+            android:id="@+id/RLMensaje"
+            android:layout_margin="5dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/Et_mensaje_chat"
+                android:hint="@string/Et_mensaje_chat"
+                android:padding="10dp"
+                android:inputType="textMultiLine|textCapSentences"
+                android:layout_centerVertical="true"
+                android:layout_toStartOf="@+id/adjuntarFAB"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/adjuntarFAB"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_toStartOf="@+id/enviarFAB"
+                android:layout_marginEnd="7dp"
+                app:fabSize="mini"
+                android:elevation="0dp"
+                android:src="@drawable/ic_selec_imagen" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/enviarFAB"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_alignParentEnd="true"
+                app:fabSize="mini"
+                android:elevation="0dp"
+                android:src="@drawable/ic_enviar_chat" />
+
+
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/Tv_bloqueado"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_toStartOf="@+id/enviarFAB"
-            android:layout_marginEnd="7dp"
-            app:fabSize="mini"
-            android:elevation="0dp"
-            android:src="@drawable/ic_selec_imagen" />
+            android:background="#FFCDD2"
+            android:gravity="center"
+            android:padding="15dp"
+            android:text="No puedes enviar mensajes"
+            android:textColor="#B71C1C"
+            android:textStyle="bold"
+            android:visibility="gone" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/enviarFAB"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_alignParentEnd="true"
-            app:fabSize="mini"
-            android:elevation="0dp"
-            android:src="@drawable/ic_enviar_chat" />
-
-
-    </RelativeLayout>
-
-    <View
-        android:id="@+id/View2"
-        android:background="#ccc"
-        android:layout_above="@id/RLMensaje"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"/>
+    </LinearLayout>
 
 </RelativeLayout>

@@ -53,5 +53,7 @@
                 android:text="@string/item_email" />
 
         </androidx.appcompat.widget.LinearLayoutCompat>
+
+
     </androidx.appcompat.widget.LinearLayoutCompat>
 </com.google.android.material.card.MaterialCardView>
