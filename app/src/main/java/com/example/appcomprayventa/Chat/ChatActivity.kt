@@ -81,8 +81,14 @@ class ChatActivity : AppCompatActivity() {
         }
 
         checkBlockingStatus()
+        resetNoLeidos()
         cargarInfo()
         cargarMensajes()
+    }
+
+    private fun resetNoLeidos() {
+        val ref = FirebaseDatabase.getInstance().getReference("CompraVenta/NoLeidos").child(miUid)
+        ref.child(uid).setValue(0)
     }
 
 
@@ -176,6 +182,9 @@ class ChatActivity : AppCompatActivity() {
 
                     val adaptadorChat = AdaptadorChat(this@ChatActivity, mensajesArrayList)
                     binding.chatsRV.adapter = adaptadorChat
+                    if (mensajesArrayList.isNotEmpty()) {
+                        binding.chatsRV.scrollToPosition(mensajesArrayList.size - 1)
+                    }
                 }
 
                 override fun onCancelled(error: DatabaseError) {
@@ -278,6 +287,7 @@ class ChatActivity : AppCompatActivity() {
             .addOnSuccessListener {
                 progressDialog.dismiss()
                 binding.EtMensajeChat.setText("")
+                incrementarNoLeidos()
             }
             .addOnFailureListener { e ->
                 progressDialog.dismiss()
@@ -299,5 +309,17 @@ class ChatActivity : AppCompatActivity() {
         }
     }
 
-
+    private fun incrementarNoLeidos() {
+        val ref = FirebaseDatabase.getInstance().getReference("CompraVenta/NoLeidos").child(uid).child(miUid)
+        ref.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                var actual = 0
+                if (snapshot.exists()) {
+                    actual = (snapshot.value as? Long)?.toInt() ?: 0
+                }
+                ref.setValue(actual + 1)
+            }
+            override fun onCancelled(error: DatabaseError) {}
+        })
+    }
 }

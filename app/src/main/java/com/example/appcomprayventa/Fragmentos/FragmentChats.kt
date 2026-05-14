@@ -25,6 +25,7 @@ class FragmentChats : Fragment() {
 
     private lateinit var mContext: Context
     private var usuarioLista: MutableList<Usuario> = mutableListOf()
+    private var mapaNoLeidos: MutableMap<String, Int> = mutableMapOf()
     private var usuarioAdaptador: AdaptadorUsuario? = null
 
     override fun onAttach(context: Context) {
@@ -44,6 +45,7 @@ class FragmentChats : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         listarUsuarios()
+        escucharNoLeidos()
 
         binding.etBuscarUsuario.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -54,6 +56,28 @@ class FragmentChats : Fragment() {
         })
     }
 
+
+    private fun escucharNoLeidos() {
+        val miUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val ref = FirebaseDatabase.getInstance().getReference("CompraVenta/NoLeidos").child(miUid)
+        
+        ref.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (_binding == null || !isAdded) return
+                mapaNoLeidos.clear()
+                for (ds in snapshot.children) {
+                    try {
+                        val count = (ds.value as? Long)?.toInt() ?: 0
+                        mapaNoLeidos[ds.key!!] = count
+                    } catch (e: Exception) {
+                        Log.e("FirebaseError", "Error al procesar no leídos: ${e.message}")
+                    }
+                }
+                actualizarAdaptador()
+            }
+            override fun onCancelled(error: DatabaseError) {}
+        })
+    }
 
     private fun listarUsuarios() {
         val firebaseUser = FirebaseAuth.getInstance().currentUser?.uid ?: return
@@ -124,7 +148,7 @@ class FragmentChats : Fragment() {
             binding.rvUsuarios.visibility = View.VISIBLE
 
             val currentContext = context ?: mContext
-            usuarioAdaptador = AdaptadorUsuario(currentContext, usuarioLista)
+            usuarioAdaptador = AdaptadorUsuario(currentContext, usuarioLista, mapaNoLeidos)
             binding.rvUsuarios.adapter = usuarioAdaptador
         }
     }

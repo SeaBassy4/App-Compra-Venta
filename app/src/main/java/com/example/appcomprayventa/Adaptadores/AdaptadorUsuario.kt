@@ -16,7 +16,8 @@ import com.example.appcomprayventa.R
 
 class AdaptadorUsuario(
     private val context: Context,
-    private val listaUsuarios: List<Usuario>
+    private val listaUsuarios: List<Usuario>,
+    private val mapaNoLeidos: Map<String, Int> = emptyMap()
 ) : RecyclerView.Adapter<AdaptadorUsuario.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -34,6 +35,15 @@ class AdaptadorUsuario(
             .load(usuario.urlImagenPerfil)
             .placeholder(R.drawable.ic_imagen_perfil)
             .into(holder.imagen)
+
+        // Actualizar badge de no leídos
+        val count = mapaNoLeidos[usuario.uid] ?: 0
+        if (count > 0) {
+            holder.noLeidos.visibility = View.VISIBLE
+            holder.noLeidos.text = count.toString()
+        } else {
+            holder.noLeidos.visibility = View.GONE
+        }
 
         holder.itemView.setOnClickListener {
             val intent = Intent(context, ChatActivity::class.java)
@@ -56,5 +66,6 @@ class AdaptadorUsuario(
         val email: TextView = itemView.findViewById(R.id.item_email)
         val nombres: TextView = itemView.findViewById(R.id.item_nombre)
         val imagen: ImageView = itemView.findViewById(R.id.item_imagen)
+        val noLeidos: TextView = itemView.findViewById(R.id.item_noleidos)
     }
 }
